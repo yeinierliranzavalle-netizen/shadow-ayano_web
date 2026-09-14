@@ -1,312 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayanokōji Digital</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
-        body {
-            background: #0a0a14;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-        .card {
-            max-width: 700px;
-            width: 100%;
-            background: #0d1420;
-            border: 1px solid #2c3a5a;
-            border-radius: 20px;
-            padding: 1.5rem;
-        }
-        h1 {
-            color: #aaffff;
-            text-align: center;
-            font-weight: 300;
-            letter-spacing: 2px;
-        }
-        h1 span { color: #7a5cff; font-weight: 600; }
-        .subtitle {
-            text-align: center;
-            color: #6a6a8a;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-        }
-        .chat-box {
-            height: 320px;
-            overflow-y: auto;
-            border: 1px solid #1a2a3a;
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 1rem 0;
-            background: #0a1525;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .msg {
-            max-width: 85%;
-            padding: 0.5rem 1rem;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            word-wrap: break-word;
-        }
-        .msg.user {
-            align-self: flex-end;
-            background: #1a2a4a;
-            color: #d0d8e8;
-        }
-        .msg.bot {
-            align-self: flex-start;
-            background: #0f1a2a;
-            border: 1px solid #2c3a5a;
-            color: #c8d8e8;
-        }
-        .input-area {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        .input-area input {
-            flex: 1;
-            padding: 0.7rem;
-            border-radius: 12px;
-            border: 1px solid #2c4a6a;
-            background: #0a1525;
-            color: white;
-        }
-        .input-area input:focus {
-            outline: none;
-            border-color: #7a5cff;
-        }
-        .input-area button {
-            padding: 0.7rem 1.2rem;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2a1a5a, #4a2a7a);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .input-area button:hover {
-            background: #3a2a6a;
-        }
-        .file-area {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .file-area input[type="file"] {
-            flex: 1;
-            padding: 0.5rem;
-            border-radius: 12px;
-            border: 1px solid #2c4a6a;
-            background: #0a1525;
-            color: #aaffff;
-            min-width: 130px;
-        }
-        .file-area select {
-            padding: 0.5rem;
-            border-radius: 12px;
-            border: 1px solid #2c4a6a;
-            background: #0a1525;
-            color: white;
-            min-width: 90px;
-        }
-        .file-area button {
-            padding: 0.7rem 1.2rem;
-            border: none;
-            border-radius: 12px;
-            background: #2a4a6a;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .file-area button:hover {
-            background: #3a5a8a;
-        }
-        .result {
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            border-radius: 8px;
-            background: #0a1525;
-            border: 1px solid #2c4a6a;
-            font-size: 0.85rem;
-            color: #aaffff;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .status {
-            font-size: 0.8rem;
-            color: #6a6a8a;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ayanokōji · Aliado Digital</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="card">
-        <h1>⚡ <span>SHADOW</span> ARISE</h1>
-        <p class="subtitle">Ayanokōji Digital · Control Total</p>
 
-        <div class="chat-box" id="chatMessages">
-            <div class="msg bot">Agente listo. Esperando órdenes.</div>
-        </div>
+<header>
+  <div class="brand">
+    <div class="logo">A</div>
+    <b>Ayanokōji</b><span>· Digital</span>
+  </div>
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <span id="stat">conectando</span>
+  </div>
+</header>
 
-        <div class="input-area">
-            <input type="text" id="chatInput" placeholder="Escribe tu mensaje...">
-            <button id="sendBtn">Enviar</button>
-        </div>
-
-        <div class="file-area">
-            <input type="file" id="fileInput">
-            <select id="destinoSelect">
-                <option value="agente">Agente</option>
-                <option value="test">Test</option>
-                <option value="shadow">Shadow</option>
-            </select>
-            <button id="uploadBtn">Subir</button>
-            <button id="resumirBtn" style="background:#2a4a6a">Resumir</button>
-        </div>
-
-        <div id="resultado" class="result">Esperando comandos...</div>
-        <div class="status" id="status">Conectado</div>
+<main id="log">
+  <div class="welcome" id="welcome">
+    <h2>Aliado <b>Digital</b> activo</h2>
+    <p>Escribe una orden, sube un archivo a mi núcleo, o pídeme que procese tu contexto completo.</p>
+    <div class="chips">
+      <button class="chip" data-t="Sube esto a tu núcleo">📥 Subir a núcleo</button>
+      <button class="chip" data-t="Muéstrame tu memoria">🧠 Ver memoria</button>
+      <button class="chip" data-t="Cómo estás">📊 Estado</button>
+      <button class="chip" data-t="Muéstrame tu contexto guardado">📋 Contexto</button>
     </div>
+  </div>
+</main>
 
-    <script>
-        // ==================================================
-        // CONFIGURACIÓN
-        // ==================================================
-        const WORKER_URL = 'https://shadow-ayano.yeinierliranzavalle.workers.dev';
+<button class="scroll-btn" id="scrollBtn" aria-label="Bajar">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+</button>
 
-        // ==================================================
-        // ELEMENTOS DEL DOM
-        // ==================================================
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const fileInput = document.getElementById('fileInput');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const resumirBtn = document.getElementById('resumirBtn');
-        const destinoSelect = document.getElementById('destinoSelect');
-        const resultadoDiv = document.getElementById('resultado');
-        const statusDiv = document.getElementById('status');
+<footer>
+  <div class="tools">
+    <button class="tool" id="btnFile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Subir
+    </button>
+    <button class="tool" id="btnProc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Procesos
+    </button>
+    <button class="tool" id="btnCtx">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6H9z"/><path d="M3 9h6v6H3z"/><path d="M15 9h6v6h-6z"/><path d="M9 15h6v6H9z"/></svg>
+      Contexto
+    </button>
+    <button class="tool" id="btnReset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Limpiar
+    </button>
+  </div>
 
-        // ==================================================
-        // FUNCIONES AUXILIARES
-        // ==================================================
-        function addMsg(tipo, texto) {
-            const div = document.createElement('div');
-            div.className = 'msg ' + tipo;
-            div.textContent = texto;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+  <div class="composer">
+    <textarea id="msg" placeholder="Escribe al Comandante..." rows="1"></textarea>
+    <button class="send" id="send" aria-label="Enviar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+    </button>
+  </div>
 
-        function setResultado(texto) {
-            resultadoDiv.textContent = texto;
-        }
+  <div class="meta">
+    <span><kbd>Enter</kbd> enviar · <kbd>Shift</kbd>+<kbd>Enter</kbd> nueva línea</span>
+    <span id="meta-info"></span>
+  </div>
 
-        // ==================================================
-        // CHAT
-        // ==================================================
-        async function enviarMensaje() {
-            const texto = chatInput.value.trim();
-            if (!texto) return;
+  <input type="file" id="file" accept=".json,.csv,.txt,application/json,text/plain">
+</footer>
 
-            addMsg('user', texto);
-            chatInput.value = '';
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-            statusDiv.textContent = '⏳ Procesando...';
+<div class="panel" id="panel">
+  <div class="panel-c">
+    <div class="panel-h">
+      <h3 id="panelT">Panel</h3>
+      <button class="close" id="panelX">×</button>
+    </div>
+    <div id="panelB"></div>
+  </div>
+</div>
 
-            try {
-                const res = await fetch(WORKER_URL + '/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mensaje: texto })
-                });
-                const data = await res.json();
-                addMsg('bot', data.respuesta || '⚠️ Error desconocido.');
-            } catch (e) {
-                addMsg('bot', '⚠️ Error de conexión.');
-            }
-
-            chatInput.disabled = false;
-            sendBtn.disabled = false;
-            chatInput.focus();
-            statusDiv.textContent = 'Conectado';
-        }
-
-        sendBtn.onclick = enviarMensaje;
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') enviarMensaje();
-        });
-
-        // ==================================================
-        // SUBIR ARCHIVO
-        // ==================================================
-        uploadBtn.onclick = async () => {
-            const file = fileInput.files[0];
-            if (!file) {
-                setResultado('❌ Selecciona un archivo.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('archivo', file);
-            formData.append('nombre', file.name);
-            formData.append('destino', destinoSelect.value);
-
-            setResultado('⏳ Subiendo...');
-
-            try {
-                const res = await fetch(WORKER_URL + '/api/subir', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                setResultado(data.mensaje ? '✅ ' + data.mensaje : '❌ ' + data.error);
-            } catch (e) {
-                setResultado('❌ Error al subir.');
-            }
-        };
-
-        // ==================================================
-        // RESUMIR
-        // ==================================================
-        resumirBtn.onclick = async () => {
-            const input = prompt('Ingresa el texto a resumir o el ID del archivo (formato: file:ID)');
-            if (!input) return;
-
-            setResultado('⏳ Generando resumen...');
-
-            try {
-                let body = { texto: input, destino: destinoSelect.value };
-                if (input.startsWith('file:')) {
-                    body = { archivoId: input.replace('file:', ''), destino: destinoSelect.value };
-                }
-
-                const res = await fetch(WORKER_URL + '/api/resumir', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
-
-                if (data.fases) {
-                    setResultado('📋 Fases:\n' + data.fases.map((f, i) => (i + 1) + '. ' + f).join('\n'));
-                } else {
-                    setResultado('❌ ' + (data.error || 'Error al resumir.'));
-                }
-            } catch (e) {
-                setResultado('❌ Error de conexión.');
-            }
-        };
-    </script>
+<script src="app.js"></script>
 </body>
-  </html>
+</html>
