@@ -16,7 +16,6 @@ const scrollBtn = document.getElementById('scrollBtn');
 
 let busy = false;
 let procTimer = null;
-let lastProcState = {};
 
 msg.addEventListener('input', () => {
   msg.style.height = 'auto';
@@ -199,7 +198,6 @@ async function refrescarProcesos() {
           } catch (e) {}
         }
       }
-      lastProcState[p.id] = { hechos: p.bloques_hechos, total: p.bloques_total };
     }
     panelB.innerHTML = d.procesos.map(p => {
       const total = p.bloques_total || 0;
@@ -230,7 +228,17 @@ async function abrirContexto() {
       panelB.innerHTML = '<div class="empty">Sin contexto guardado.<br><br>Sube un archivo JSON a tu núcleo para generarlo.</div>';
       return;
     }
-    const TITULOS = ['Identidad','Contexto','Objetivo','Proyecto','Alineación','Propósito','Reglas operativas'];
+    const TITULOS = [
+      'Identidad',
+      'Contexto',
+      'Objetivo',
+      'Proyecto Shadow Arise',
+      'Aliado Digital',
+      'IA Publicadora',
+      'Reglas Operativas',
+      'Decisiones Tomadas',
+      'Ideas Pendientes'
+    ];
     panelB.innerHTML = d.contextos.map(c => {
       const fecha = new Date(c.fecha).toLocaleString('es-ES', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
@@ -269,7 +277,6 @@ checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
 
-// Auto-retoma global cada 45 segundos
 setInterval(async () => {
   try {
     const d = await api('/api/proceso');
