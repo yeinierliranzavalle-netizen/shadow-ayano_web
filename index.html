@@ -13,30 +13,70 @@
     <div class="logo">A</div>
     <b>Ayanokōji</b><span>· Digital</span>
   </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="chat">Chat</button>
+    <button class="tab" data-view="sandbox">Sandbox</button>
+    <button class="tab" data-view="stats">Stats</button>
+    <button class="tab" data-view="ideas">Ideas</button>
+  </nav>
   <div class="status">
     <div class="dot" id="dot"></div>
     <span id="stat">conectando</span>
   </div>
 </header>
 
-<main id="log">
-  <div class="welcome" id="welcome">
-    <h2>Aliado <b>Digital</b> activo</h2>
-    <p>Escribe una orden, sube un archivo a mi núcleo, o pídeme que procese tu contexto completo.</p>
-    <div class="chips">
-      <button class="chip" data-t="Sube esto a tu núcleo">📥 Subir a núcleo</button>
-      <button class="chip" data-t="Muéstrame tu memoria">🧠 Ver memoria</button>
-      <button class="chip" data-t="Cómo estás">📊 Estado</button>
-      <button class="chip" data-t="Muéstrame tu contexto guardado">📋 Contexto</button>
+<main>
+  <!-- CHAT -->
+  <section id="view-chat" class="view active">
+    <div id="log" class="log">
+      <div class="welcome" id="welcome">
+        <h2>Aliado <b>Digital</b> activo</h2>
+        <p>Escribe una orden, sube un archivo a mi núcleo, o pídeme que procese tu contexto completo.</p>
+        <div class="chips">
+          <button class="chip" data-t="Cómo estás">📊 Estado</button>
+          <button class="chip" data-t="Muéstrame tu memoria">🧠 Ver memoria</button>
+          <button class="chip" data-t="Muéstrame tu contexto guardado">📋 Contexto</button>
+        </div>
+      </div>
     </div>
-  </div>
+    <button class="scroll-btn" id="scrollBtn" aria-label="Bajar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </section>
+
+  <!-- SANDBOX -->
+  <section id="view-sandbox" class="view">
+    <div class="section-head">
+      <h3>Sandbox de Decisiones</h3>
+      <p class="sub">Escenarios generados. Ayanokōji decide, simula y aprende.</p>
+    </div>
+    <div id="sandbox-content"></div>
+  </section>
+
+  <!-- STATS -->
+  <section id="view-stats" class="view">
+    <div class="section-head">
+      <h3>Estado del Sistema</h3>
+      <p class="sub">Presupuesto, procesos, publicaciones y contexto.</p>
+    </div>
+    <div id="stats-content"></div>
+  </section>
+
+  <!-- IDEAS -->
+  <section id="view-ideas" class="view">
+    <div class="section-head">
+      <h3>Bandeja de Ideas</h3>
+      <p class="sub">Escribe sin juicio. Ayanokōji no leerá nada hasta que tú se lo pidas.</p>
+    </div>
+    <div class="idea-box">
+      <textarea id="idea-input" placeholder="Escribe una idea, tarea futura, o pensamiento..." rows="3"></textarea>
+      <button id="idea-save">Guardar idea</button>
+    </div>
+    <div id="ideas-content"></div>
+  </section>
 </main>
 
-<button class="scroll-btn" id="scrollBtn" aria-label="Bajar">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-</button>
-
-<footer>
+<footer id="footer">
   <div class="tools">
     <button class="tool" id="btnFile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -55,19 +95,16 @@
       Limpiar
     </button>
   </div>
-
   <div class="composer">
     <textarea id="msg" placeholder="Escribe al Comandante..." rows="1"></textarea>
     <button class="send" id="send" aria-label="Enviar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
     </button>
   </div>
-
   <div class="meta">
     <span><kbd>Enter</kbd> enviar · <kbd>Shift</kbd>+<kbd>Enter</kbd> nueva línea</span>
     <span id="meta-info"></span>
   </div>
-
   <input type="file" id="file" accept=".json,.csv,.txt,application/json,text/plain">
 </footer>
 
