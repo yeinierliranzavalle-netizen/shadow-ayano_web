@@ -34,6 +34,7 @@ tabs.forEach(t => {
   t.addEventListener('click', () => {
     const v = t.dataset.view;
     if (!v) return;
+    document.body.dataset.view = v;
     tabs.forEach(x => x.classList.toggle('active', x === t));
     views.forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
     currentView = v;
@@ -42,6 +43,70 @@ tabs.forEach(t => {
     if (v === 'ideas') cargarIdeas();
   });
 });
+
+// ============ COPY BUTTON ============
+function addCopyButton(pre) {
+  if (pre.querySelector('.copy-btn')) return;
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copiar';
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const code = pre.querySelector('code') || pre;
+    try {
+      await navigator.clipboard.writeText(code.textContent);
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copiar';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      // Fallback para webviews sin Clipboard API
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+      sel.removeAllRanges();
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'Copiar';
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+  });
+  pre.style.position = 'relative';
+  pre.appendChild(btn);
+}
+
+function renderizarMarkdown(texto) {
+  let html = texto
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Bloques de código ``` ... ```
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => {
+    return '<pre><code>' + code.trim() + '</code></pre>';
+  });
+
+  // Código inline
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Negritas
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Cursivas
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Saltos de línea
+  html = html.replace(/\n/g, '<br>');
+
+  return html;
+}
 
 // ============ CHAT ============
 msg.addEventListener('input', () => {
@@ -75,8 +140,10 @@ function add(texto, tipo = 'a', etiqueta = '') {
     d.appendChild(l);
   }
   const t = document.createElement('div');
-  t.textContent = texto;
+  t.innerHTML = renderizarMarkdown(texto);
   d.appendChild(t);
+  // Añadir botones de copiar a cada bloque de código
+  d.querySelectorAll('pre').forEach(pre => addCopyButton(pre));
   log.appendChild(d);
   log.scrollTop = log.scrollHeight;
   return d;
@@ -162,7 +229,7 @@ fileIn.addEventListener('change', async () => {
   const nombre = f.name.toLowerCase();
   const esJSON = nombre.endsWith('.json');
 
-  if (esJSON && confirm('¿Importar como historial largo? (Sí = historial largo sin resumir. No = procesar y resumir.)')) {
+  if (esJSON && confirm('¿Importar como historial largo? (Sí = ventana deslizante. No = procesar y resumir.)')) {
     add('Importando "' + f.name + '" al historial largo...', 's');
     const fd = new FormData();
     fd.append('archivo', f);
@@ -318,7 +385,6 @@ async function cargarStats() {
 
     let html = '';
 
-    // Presupuesto
     html += '<div class="card"><h4>Presupuesto diario</h4>';
     const areas = ['chat','procesamiento','sandbox','publisher','vision'];
     areas.forEach(a => {
@@ -332,7 +398,6 @@ async function cargarStats() {
     });
     html += '</div>';
 
-    // Procesos
     const procesos = proc.procesos || [];
     const activos = procesos.filter(p => p.estado === 'procesando').length;
     const completados = procesos.filter(p => p.estado === 'completado').length;
@@ -344,7 +409,6 @@ async function cargarStats() {
       '<div class="metric"><div class="metric-val err">' + errores + '</div><div class="metric-lbl">Errores</div></div>' +
       '</div></div>';
 
-    // Publicaciones
     const pubs = pub.publicaciones || [];
     const publicadas = pubs.filter(p => p.estado === 'publicada').length;
     const pendientes = pubs.filter(p => p.estado === 'pendiente').length;
@@ -354,7 +418,6 @@ async function cargarStats() {
       '<div class="metric"><div class="metric-val">' + pendientes + '</div><div class="metric-lbl">Pendientes</div></div>' +
       '</div></div>';
 
-    // Contexto
     const ctxs = ctx.contextos || [];
     html += '<div class="card"><h4>Contexto</h4>' +
       '<div class="metric"><div class="metric-val">' + ctxs.length + '</div><div class="metric-lbl">Resúmenes guardados</div></div>' +
