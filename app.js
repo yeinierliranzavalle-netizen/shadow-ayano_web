@@ -1,5 +1,6 @@
 const WORKER_URL = 'https://shadow-ayano.yeinierliranzavalle.workers.dev';
 const UID = 'comandante';
+const LIMITE_HISTORIAL = 500;
 
 const log = document.getElementById('log');
 const welcome = document.getElementById('welcome');
@@ -41,6 +42,7 @@ tabs.forEach(t => {
     if (v === 'stats') cargarStats();
     if (v === 'sandbox') cargarSandbox();
     if (v === 'ideas') cargarIdeas();
+    if (v === 'bandeja') cargarNotificaciones();
   });
 });
 
@@ -57,12 +59,8 @@ function addCopyButton(pre) {
       await navigator.clipboard.writeText(code.textContent);
       btn.textContent = '✓ Copiado';
       btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = 'Copiar';
-        btn.classList.remove('copied');
-      }, 2000);
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
     } catch (err) {
-      // Fallback para webviews sin Clipboard API
       const range = document.createRange();
       range.selectNodeContents(code);
       const sel = window.getSelection();
@@ -72,10 +70,7 @@ function addCopyButton(pre) {
       sel.removeAllRanges();
       btn.textContent = '✓ Copiado';
       btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = 'Copiar';
-        btn.classList.remove('copied');
-      }, 2000);
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
     }
   });
   pre.style.position = 'relative';
@@ -88,23 +83,13 @@ function renderizarMarkdown(texto) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Bloques de código ``` ... ```
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => {
     return '<pre><code>' + code.trim() + '</code></pre>';
   });
-
-  // Código inline
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // Negritas
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-  // Cursivas
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-  // Saltos de línea
   html = html.replace(/\n/g, '<br>');
-
   return html;
 }
 
@@ -142,7 +127,6 @@ function add(texto, tipo = 'a', etiqueta = '') {
   const t = document.createElement('div');
   t.innerHTML = renderizarMarkdown(texto);
   d.appendChild(t);
-  // Añadir botones de copiar a cada bloque de código
   d.querySelectorAll('pre').forEach(pre => addCopyButton(pre));
   log.appendChild(d);
   log.scrollTop = log.scrollHeight;
@@ -214,6 +198,52 @@ document.querySelectorAll('.chip').forEach(c => {
   });
 });
 
+// ============ CARGAR HISTORIAL LARGO AL INICIO ============
+async function cargarHistorialLargo() {
+  try {
+    const d = await api('/api/historial_largo?user_id=' + encodeURIComponent(UID) + '&limite=' + LIMITE_HISTORIAL);
+    if (!d.historial || !d.historial.length) {
+      return; // No hay historial, dejar la bienvenida
+    }
+
+    // Quitar bienvenida
+    if (welcome && welcome.parentNode) welcome.remove();
+
+    // Marca de inicio
+    const marca = document.createElement('div');
+    marca.className = 'msg s';
+    marca.textContent = '—— Historial previo · ' + d.historial.length + ' mensajes ——';
+    log.appendChild(marca);
+
+    // Renderizar mensajes
+    for (const m of d.historial) {
+      const rol = m.rol === 'assistant' ? 'a' : 'u';
+      const etiqueta = m.rol === 'assistant' ? 'Ayanokōji' : 'Comandante';
+      const d2 = document.createElement('div');
+      d2.className = 'msg ' + rol;
+      const l = document.createElement('div');
+      l.className = 'lbl';
+      l.textContent = etiqueta;
+      d2.appendChild(l);
+      const t2 = document.createElement('div');
+      t2.innerHTML = renderizarMarkdown(m.contenido || '');
+      d2.appendChild(t2);
+      d2.querySelectorAll('pre').forEach(pre => addCopyButton(pre));
+      log.appendChild(d2);
+    }
+
+    // Marca de fin
+    const fin = document.createElement('div');
+    fin.className = 'msg s';
+    fin.textContent = '—— Fin del historial · continúa la conversación ——';
+    log.appendChild(fin);
+
+    log.scrollTop = log.scrollHeight;
+  } catch (e) {
+    console.warn('No se pudo cargar el historial largo:', e);
+  }
+}
+
 // ============ SUBIR ARCHIVO ============
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
@@ -238,8 +268,13 @@ fileIn.addEventListener('change', async () => {
     try {
       const r = await fetch(WORKER_URL + '/api/importar', { method: 'POST', body: fd });
       const d = await r.json();
-      if (d.error) add('Error: ' + d.error, 'e');
-      else add('Importado · ' + d.insertados + ' mensajes de ' + d.total + ' totales.', 's');
+      if (d.error) {
+        add('Error: ' + d.error, 'e');
+        if (d.diagnostico) add('DIAGNÓSTICO:\n' + JSON.stringify(d.diagnostico, null, 2), 'e');
+      } else {
+        add('Importado · ' + d.insertados + ' mensajes de ' + d.total + ' totales.', 's');
+        if (d.stats_extractor) add('STATS:\n' + JSON.stringify(d.stats_extractor, null, 2), 's');
+      }
     } catch (e) {
       add('Error al importar: ' + e.message, 'e');
     }
@@ -374,6 +409,7 @@ document.getElementById('btnReset').addEventListener('click', async () => {
 // ============ STATS ============
 async function cargarStats() {
   const cont = document.getElementById('stats-content');
+  if (!cont) return;
   cont.innerHTML = '<div class="empty">cargando...</div>';
   try {
     const [pres, proc, pub, ctx] = await Promise.all([
@@ -432,6 +468,7 @@ async function cargarStats() {
 // ============ SANDBOX ============
 async function cargarSandbox() {
   const cont = document.getElementById('sandbox-content');
+  if (!cont) return;
   cont.innerHTML = '<div class="empty">cargando...</div>';
   try {
     const d = await api('/api/sandbox');
@@ -464,6 +501,7 @@ async function cargarSandbox() {
 // ============ IDEAS ============
 async function cargarIdeas() {
   const cont = document.getElementById('ideas-content');
+  if (!cont) return;
   cont.innerHTML = '<div class="empty">cargando...</div>';
   try {
     const r = await fetch(WORKER_URL + '/api/d1', {
@@ -488,7 +526,7 @@ async function cargarIdeas() {
   }
 }
 
-document.getElementById('idea-save').addEventListener('click', async () => {
+document.getElementById('idea-save')?.addEventListener('click', async () => {
   const ta = document.getElementById('idea-input');
   const texto = ta.value.trim();
   if (!texto) return;
@@ -509,11 +547,64 @@ document.getElementById('idea-save').addEventListener('click', async () => {
   }
 });
 
+// ============ BANDEJA DE NOTIFICACIONES ============
+async function cargarNotificaciones() {
+  const cont = document.getElementById('notif-content');
+  if (!cont) return;
+  cont.innerHTML = '<div class="empty">cargando...</div>';
+  try {
+    const d = await api('/api/notificaciones');
+    actualizarBadge(d.no_leidas || 0);
+    if (!d.notificaciones || !d.notificaciones.length) {
+      cont.innerHTML = '<div class="empty">Sin notificaciones aún.</div>';
+      return;
+    }
+    cont.innerHTML = d.notificaciones.map(n => {
+      const fecha = new Date(n.fecha).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const nueva = n.leida ? '' : ' style="border-left:2px solid var(--acc)"';
+      return '<div class="item"' + nueva + '>' +
+        '<div class="k">' + (n.tipo || 'general') + ' · ' + fecha + '</div>' +
+        '<div class="v" style="font-weight:500;margin-bottom:4px">' + (n.titulo || '') + '</div>' +
+        '<div class="v" style="color:var(--fg2);font-size:12.5px">' + (n.mensaje || '') + '</div>' +
+        '</div>';
+    }).join('');
+  } catch (e) {
+    cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
+}
+
+function actualizarBadge(n) {
+  const b = document.getElementById('notif-badge');
+  if (!b) return;
+  if (n > 0) { b.textContent = n; b.style.display = 'inline-block'; }
+  else b.style.display = 'none';
+}
+
+document.getElementById('marcar-leidas')?.addEventListener('click', async () => {
+  await api('/api/notificaciones/leer', {
+    method: 'POST',
+    body: JSON.stringify({ ids: [] })
+  });
+  cargarNotificaciones();
+});
+
 // ============ INIT ============
 checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
 
+// Cargar historial largo al abrir
+cargarHistorialLargo();
+
+// Refresco periódico del badge
+setInterval(async () => {
+  try {
+    const d = await api('/api/notificaciones');
+    actualizarBadge(d.no_leidas || 0);
+  } catch (e) {}
+}, 60000);
+
+// Auto-retoma en background
 setInterval(async () => {
   if (currentView !== 'chat') return;
   try {
