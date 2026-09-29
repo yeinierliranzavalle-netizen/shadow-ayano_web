@@ -21,7 +21,6 @@ let busy = false;
 let procTimer = null;
 let currentView = 'chat';
 
-// ============ API HELPER ============
 async function api(path, opts = {}) {
   const r = await fetch(WORKER_URL + path, {
     headers: { 'Content-Type': 'application/json' },
@@ -30,7 +29,6 @@ async function api(path, opts = {}) {
   return r.json();
 }
 
-// ============ TABS ============
 tabs.forEach(t => {
   t.addEventListener('click', () => {
     const v = t.dataset.view;
@@ -46,7 +44,6 @@ tabs.forEach(t => {
   });
 });
 
-// ============ COPY BUTTON ============
 function addCopyButton(pre) {
   if (pre.querySelector('.copy-btn')) return;
   const btn = document.createElement('button');
@@ -93,7 +90,6 @@ function renderizarMarkdown(texto) {
   return html;
 }
 
-// ============ CHAT ============
 msg.addEventListener('input', () => {
   msg.style.height = 'auto';
   msg.style.height = Math.min(msg.scrollHeight, 180) + 'px';
@@ -198,24 +194,18 @@ document.querySelectorAll('.chip').forEach(c => {
   });
 });
 
-// ============ CARGAR HISTORIAL LARGO AL INICIO ============
 async function cargarHistorialLargo() {
   try {
     const d = await api('/api/historial_largo?user_id=' + encodeURIComponent(UID) + '&limite=' + LIMITE_HISTORIAL);
-    if (!d.historial || !d.historial.length) {
-      return; // No hay historial, dejar la bienvenida
-    }
+    if (!d.historial || !d.historial.length) return;
 
-    // Quitar bienvenida
     if (welcome && welcome.parentNode) welcome.remove();
 
-    // Marca de inicio
     const marca = document.createElement('div');
     marca.className = 'msg s';
     marca.textContent = '—— Historial previo · ' + d.historial.length + ' mensajes ——';
     log.appendChild(marca);
 
-    // Renderizar mensajes
     for (const m of d.historial) {
       const rol = m.rol === 'assistant' ? 'a' : 'u';
       const etiqueta = m.rol === 'assistant' ? 'Ayanokōji' : 'Comandante';
@@ -232,7 +222,6 @@ async function cargarHistorialLargo() {
       log.appendChild(d2);
     }
 
-    // Marca de fin
     const fin = document.createElement('div');
     fin.className = 'msg s';
     fin.textContent = '—— Fin del historial · continúa la conversación ——';
@@ -244,7 +233,6 @@ async function cargarHistorialLargo() {
   }
 }
 
-// ============ SUBIR ARCHIVO ============
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
 fileIn.addEventListener('change', async () => {
@@ -302,7 +290,6 @@ fileIn.addEventListener('change', async () => {
   fileIn.value = '';
 });
 
-// ============ PANEL ============
 function abrirPanel(titulo) {
   panelT.textContent = titulo;
   panel.classList.add('on');
@@ -314,7 +301,6 @@ function cerrarPanel() {
 document.getElementById('panelX').addEventListener('click', cerrarPanel);
 panel.addEventListener('click', (e) => { if (e.target === panel) cerrarPanel(); });
 
-// ============ PROCESOS ============
 async function abrirProcesos() {
   abrirPanel('Procesos activos');
   panelB.innerHTML = '<div class="empty">cargando...</div>';
@@ -362,7 +348,6 @@ async function refrescarProcesos() {
 }
 document.getElementById('btnProc').addEventListener('click', abrirProcesos);
 
-// ============ CONTEXTO ============
 async function abrirContexto() {
   abrirPanel('Contexto guardado');
   panelB.innerHTML = '<div class="empty">cargando...</div>';
@@ -392,7 +377,6 @@ async function abrirContexto() {
 }
 document.getElementById('btnCtx').addEventListener('click', abrirContexto);
 
-// ============ RESET ============
 document.getElementById('btnReset').addEventListener('click', async () => {
   if (!confirm('¿Limpiar el historial de chat y el historial largo?')) return;
   try {
@@ -406,7 +390,6 @@ document.getElementById('btnReset').addEventListener('click', async () => {
   }
 });
 
-// ============ STATS ============
 async function cargarStats() {
   const cont = document.getElementById('stats-content');
   if (!cont) return;
@@ -465,7 +448,6 @@ async function cargarStats() {
   }
 }
 
-// ============ SANDBOX ============
 async function cargarSandbox() {
   const cont = document.getElementById('sandbox-content');
   if (!cont) return;
@@ -498,7 +480,6 @@ async function cargarSandbox() {
   }
 }
 
-// ============ IDEAS ============
 async function cargarIdeas() {
   const cont = document.getElementById('ideas-content');
   if (!cont) return;
@@ -547,7 +528,6 @@ document.getElementById('idea-save')?.addEventListener('click', async () => {
   }
 });
 
-// ============ BANDEJA DE NOTIFICACIONES ============
 async function cargarNotificaciones() {
   const cont = document.getElementById('notif-content');
   if (!cont) return;
@@ -588,15 +568,12 @@ document.getElementById('marcar-leidas')?.addEventListener('click', async () => 
   cargarNotificaciones();
 });
 
-// ============ INIT ============
 checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
 
-// Cargar historial largo al abrir
 cargarHistorialLargo();
 
-// Refresco periódico del badge
 setInterval(async () => {
   try {
     const d = await api('/api/notificaciones');
@@ -604,7 +581,6 @@ setInterval(async () => {
   } catch (e) {}
 }, 60000);
 
-// Auto-retoma en background
 setInterval(async () => {
   if (currentView !== 'chat') return;
   try {
