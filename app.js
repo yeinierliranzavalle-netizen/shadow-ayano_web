@@ -1,6 +1,7 @@
 const WORKER_URL = 'https://shadow-ayano.yeinierliranzavalle.workers.dev';
 const UID = 'comandante';
 const LIMITE_HISTORIAL = 500;
+const MAX_ARCHIVO = 20 * 1024 * 1024;
 
 const log = document.getElementById('log');
 const welcome = document.getElementById('welcome');
@@ -238,8 +239,8 @@ document.getElementById('btnFile').addEventListener('click', () => fileIn.click(
 fileIn.addEventListener('change', async () => {
   const f = fileIn.files[0];
   if (!f) return;
-  if (f.size > 5 * 1024 * 1024) {
-    add('El archivo supera 5MB (' + (f.size / 1048576).toFixed(2) + ' MB)', 'e');
+  if (f.size > MAX_ARCHIVO) {
+    add('El archivo supera ' + (MAX_ARCHIVO / 1048576) + 'MB (' + (f.size / 1048576).toFixed(2) + ' MB)', 'e');
     fileIn.value = '';
     return;
   }
