@@ -84,6 +84,7 @@ function renderizarMarkdown(texto) {
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => {
     return '<pre><code>' + code.trim() + '</code></pre>';
   });
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:10px;margin:8px 0" loading="lazy">');
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -236,6 +237,24 @@ async function cargarHistorialLargo() {
 
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
+document.getElementById('btnImagen')?.addEventListener('click', async () => {
+  const prompt = window.prompt('Describe la imagen a generar:');
+  if (!prompt) return;
+  add('Generando imagen: "' + prompt + '"...', 's');
+  try {
+    const d = await api('/api/imagen', {
+      method: 'POST',
+      body: JSON.stringify({ prompt, user_id: UID })
+    });
+    if (d.error) add('Error: ' + d.error, 'e');
+    else if (d.url) {
+      add('![imagen](' + WORKER_URL + d.url + ')\n\nID: `' + d.id + '`\nURL: `' + d.url + '`', 'a', 'Ayanokōji');
+    }
+  } catch (e) {
+    add('Error al generar imagen: ' + e.message, 'e');
+  }
+});
+
 fileIn.addEventListener('change', async () => {
   const f = fileIn.files[0];
   if (!f) return;
@@ -253,7 +272,7 @@ fileIn.addEventListener('change', async () => {
     const fd = new FormData();
     fd.append('archivo', f);
     fd.append('user_id', UID);
-    fd.append('limite', '500');
+    fd.append('limite', '2000');
     try {
       const r = await fetch(WORKER_URL + '/api/importar', { method: 'POST', body: fd });
       const d = await r.json();
