@@ -16,8 +16,11 @@
   <nav class="tabs">
     <button class="tab active" data-view="chat">Chat</button>
     <button class="tab" data-view="sandbox">Sandbox</button>
+    <button class="tab" data-view="shadow">Shadow</button>
     <button class="tab" data-view="stats">Stats</button>
+    <button class="tab" data-view="decisiones">Decisiones</button>
     <button class="tab" data-view="ideas">Ideas</button>
+    <button class="tab" data-view="bandeja">Bandeja <span id="notif-badge" class="badge" style="display:none">0</span></button>
   </nav>
   <div class="status">
     <div class="dot" id="dot"></div>
@@ -26,15 +29,15 @@
 </header>
 
 <main>
-  <!-- CHAT -->
   <section id="view-chat" class="view active">
     <div id="log" class="log">
       <div class="welcome" id="welcome">
         <h2>Aliado <b>Digital</b> activo</h2>
-        <p>Escribe una orden, sube un archivo a mi núcleo, o pídeme que procese tu contexto completo.</p>
+        <p>Escribe una orden, sube un archivo, o pídeme que procese tu contexto.</p>
         <div class="chips">
           <button class="chip" data-t="Cómo estás">📊 Estado</button>
-          <button class="chip" data-t="Muéstrame tu memoria">🧠 Ver memoria</button>
+          <button class="chip" data-t="Muéstrame tu memoria">🧠 Memoria</button>
+          <button class="chip" data-t="Muéstrame las decisiones que has tomado">🧭 Decisiones</button>
           <button class="chip" data-t="Muéstrame tu contexto guardado">📋 Contexto</button>
         </div>
       </div>
@@ -44,16 +47,23 @@
     </button>
   </section>
 
-  <!-- SANDBOX -->
   <section id="view-sandbox" class="view">
     <div class="section-head">
-      <h3>Sandbox de Decisiones</h3>
-      <p class="sub">Escenarios generados. Ayanokōji decide, simula y aprende.</p>
+      <h3>Sandbox de Entrenamiento</h3>
+      <p class="sub">Ayanokōji practica decisiones. Tú ves su progreso, sus aciertos y sus áreas débiles.</p>
     </div>
+    <div id="sandbox-metricas"></div>
     <div id="sandbox-content"></div>
   </section>
 
-  <!-- STATS -->
+  <section id="view-shadow" class="view">
+    <div class="section-head">
+      <h3>Shadow Arise · Estado del Producto</h3>
+      <p class="sub">Usuarios, conversión, retención, ingresos y evolución del proyecto.</p>
+    </div>
+    <div id="shadow-content"></div>
+  </section>
+
   <section id="view-stats" class="view">
     <div class="section-head">
       <h3>Estado del Sistema</h3>
@@ -62,7 +72,14 @@
     <div id="stats-content"></div>
   </section>
 
-  <!-- IDEAS -->
+  <section id="view-decisiones" class="view">
+    <div class="section-head">
+      <h3>Decisiones Autónomas</h3>
+      <p class="sub">Lo que Ayanokōji ha decidido por su cuenta. Con simulación, resultado y nivel de acierto.</p>
+    </div>
+    <div id="decisiones-content"></div>
+  </section>
+
   <section id="view-ideas" class="view">
     <div class="section-head">
       <h3>Bandeja de Ideas</h3>
@@ -74,6 +91,18 @@
     </div>
     <div id="ideas-content"></div>
   </section>
+
+  <section id="view-bandeja" class="view">
+    <div class="section-head">
+      <h3>Bandeja de Notificaciones</h3>
+      <p class="sub">Lo que Ayanokōji ha reportado. Sin depender de terceros.</p>
+    </div>
+    <div class="idea-box" style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;color:var(--fg2)">Notificaciones internas del sistema</span>
+      <button id="marcar-leidas" style="padding:6px 12px;font-size:12px">Marcar todas leídas</button>
+    </div>
+    <div id="notif-content"></div>
+  </section>
 </main>
 
 <footer id="footer">
@@ -82,6 +111,22 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Subir
     </button>
+    <button class="tool" id="btnImagen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Imagen
+    </button>
+    <button class="tool" id="btnIndexar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Indexar
+    </button>
+    <button class="tool" id="btnMigrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+      Migrar
+    </button>
+    <button class="tool" id="btnDiag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Diagnóstico
+    </button>
     <button class="tool" id="btnProc">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Procesos
@@ -89,6 +134,10 @@
     <button class="tool" id="btnCtx">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6H9z"/><path d="M3 9h6v6H3z"/><path d="M15 9h6v6h-6z"/><path d="M9 15h6v6H9z"/></svg>
       Contexto
+    </button>
+    <button class="tool" id="btnCorregir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Corregir voz
     </button>
     <button class="tool" id="btnReset">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
