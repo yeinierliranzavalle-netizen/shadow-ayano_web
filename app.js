@@ -1,7 +1,7 @@
 const WORKER_URL = 'https://shadow-ayano.yeinierliranzavalle.workers.dev';
 const UID = 'comandante';
 const LIMITE_HISTORIAL = 500;
-const MAX_ARCHIVO = 20 * 1220 * 1220;
+const MAX_ARCHIVO = 20 * 1024 * 1024;
 
 const log = document.getElementById('log');
 const welcome = document.getElementById('welcome');
@@ -15,12 +15,14 @@ const panelB = document.getElementById('panelB');
 const fileIn = document.getElementById('file');
 const metaInfo = document.getElementById('meta-info');
 const scrollBtn = document.getElementById('scrollBtn');
+const backToChat = document.getElementById('backToChat');
 const tabs = document.querySelectorAll('.tab');
 const views = document.querySelectorAll('.view');
 
 let busy = false;
 let procTimer = null;
 let currentView = 'chat';
+let scrollChatGuardado = 0; // Guardar posición del scroll del chat
 
 async function api(path, opts = {}) {
   const r = await fetch(WORKER_URL + path, {
@@ -30,7 +32,7 @@ async function api(path, opts = {}) {
   return r.json();
 }
 
-// ============ CONCIENCIA DEL COMANDANTE ============
+// ============ CONCIENCIA ============
 async function registrarConciencia(accion, detalle, pestana) {
   try {
     await fetch(WORKER_URL + '/api/conciencia', {
@@ -41,25 +43,49 @@ async function registrarConciencia(accion, detalle, pestana) {
   } catch (e) {}
 }
 
-// ============ TABS ============
+// ============ NAVEGACIÓN ENTRE PESTAÑAS ============
+function cambiarVista(v) {
+  if (v === currentView) return;
+
+  // Guardar scroll del chat si estamos saliendo del chat
+  if (currentView === 'chat' && log) {
+    scrollChatGuardado = log.scrollTop;
+  }
+
+  document.body.dataset.view = v;
+  tabs.forEach(x => x.classList.toggle('active', x.dataset.view === v));
+  views.forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
+  currentView = v;
+
+  // Mostrar/ocultar botón flotante de volver al chat
+  backToChat.classList.toggle('on', v !== 'chat');
+
+  registrarConciencia('abrir_pestana', v, v);
+
+  // Cargar contenido según pestaña
+  if (v === 'stats') cargarStats();
+  if (v === 'sandbox') cargarSandbox();
+  if (v === 'ideas') cargarIdeas();
+  if (v === 'bandeja') cargarNotificaciones();
+  if (v === 'decisiones') cargarDecisiones();
+  if (v === 'shadow') cargarShadow();
+
+  // Si volvemos al chat, restaurar scroll exacto
+  if (v === 'chat') {
+    setTimeout(() => {
+      if (log) log.scrollTop = scrollChatGuardado;
+    }, 20);
+  }
+}
+
 tabs.forEach(t => {
-  t.addEventListener('click', () => {
-    const v = t.dataset.view;
-    if (!v) return;
-    document.body.dataset.view = v;
-    tabs.forEach(x => x.classList.toggle('active', x === t));
-    views.forEach(x => x.classList.toggle('active', x.id === 'view-' + v));
-    currentView = v;
-    registrarConciencia('abrir_pestana', v, v);
-    if (v === 'stats') cargarStats();
-    if (v === 'sandbox') cargarSandbox();
-    if (v === 'ideas') cargarIdeas();
-    if (v === 'bandeja') cargarNotificaciones();
-    if (v === 'decisiones') cargarDecisiones();
-    if (v === 'shadow') cargarShadow();
-  });
+  t.addEventListener('click', () => cambiarVista(t.dataset.view));
 });
 
+// Botón flotante de volver al chat
+backToChat.addEventListener('click', () => cambiarVista('chat'));
+
+// ============ COPY BUTTON ============
 function addCopyButton(pre) {
   if (pre.querySelector('.copy-btn')) return;
   const btn = document.createElement('button');
@@ -97,6 +123,7 @@ function renderizarMarkdown(texto) {
   return html;
 }
 
+// ============ CHAT ============
 msg.addEventListener('input', () => {
   msg.style.height = 'auto';
   msg.style.height = Math.min(msg.scrollHeight, 180) + 'px';
@@ -239,6 +266,7 @@ async function cargarHistorialLargo() {
   } catch (e) {}
 }
 
+// ============ BOTONES ============
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
 document.getElementById('btnImagen')?.addEventListener('click', async () => {
@@ -253,14 +281,14 @@ document.getElementById('btnImagen')?.addEventListener('click', async () => {
 });
 
 document.getElementById('btnIndexar')?.addEventListener('click', async () => {
-  if (!confirm('¿Indexar el historial largo? Tarda 10-20 min. Usa presupuesto de procesamiento.')) return;
+  if (!confirm('¿Indexar el historial largo? Tarda 10-20 min.')) return;
   add('Indexando historial largo...', 's');
   registrarConciencia('indexar', 'iniciado', currentView);
   try {
     const r = await fetch(WORKER_URL + '/api/indexar', { method: 'POST' });
     const d = await r.json();
     if (d.error) add('Error: ' + d.error, 'e');
-    else add(`Indexado. Procesados: ${d.procesados}/${d.total}. Temas insertados: ${d.temas_insertados}.`, 's');
+    else add(`Indexado.\nModo: ${d.modo}\nProcesados: ${d.procesados}/${d.total}\nTemas insertados: ${d.temas_insertados}\nErrores IA: ${d.errores_ia}\nLotes con fallback: ${d.lotes_fallback}`, 's');
   } catch (e) { add('Error: ' + e.message, 'e'); }
 });
 
@@ -328,11 +356,12 @@ fileIn.addEventListener('change', async () => {
     const r = await fetch(WORKER_URL + '/api/subir', { method: 'POST', body: fd });
     const d = await r.json();
     if (d.error) add('Error: ' + d.error, 'e');
-    else add('Archivo guardado · ID: ' + d.id + ' · ' + d.chunks + ' fragmentos. NO procesado.', 's');
+    else add('Archivo guardado · ID: ' + d.id + ' · ' + d.chunks + ' fragmentos.', 's');
   } catch (e) { add('Error: ' + e.message, 'e'); }
   fileIn.value = '';
 });
 
+// ============ PANEL ============
 function abrirPanel(titulo) { panelT.textContent = titulo; panel.classList.add('on'); }
 function cerrarPanel() {
   panel.classList.remove('on');
@@ -400,7 +429,7 @@ document.getElementById('btnReset').addEventListener('click', async () => {
   } catch (e) { add('Error: ' + e.message, 'e'); }
 });
 
-// ============ STATS DEL SISTEMA ============
+// ============ STATS ============
 async function cargarStats() {
   const cont = document.getElementById('stats-content');
   if (!cont) return;
@@ -425,11 +454,18 @@ async function cargarStats() {
       '<div class="metric"><div class="metric-val ok">' + procesos.filter(p => p.estado === 'completado').length + '</div><div class="metric-lbl">Completados</div></div>' +
       '<div class="metric"><div class="metric-val err">' + procesos.filter(p => p.estado === 'error').length + '</div><div class="metric-lbl">Errores</div></div>' +
       '</div></div>';
+    const pubs = pub.publicaciones || [];
+    html += '<div class="card"><h4>Publicaciones</h4><div class="grid-2">' +
+      '<div class="metric"><div class="metric-val ok">' + pubs.filter(p => p.estado === 'publicada').length + '</div><div class="metric-lbl">Publicadas</div></div>' +
+      '<div class="metric"><div class="metric-val">' + pubs.filter(p => p.estado === 'pendiente').length + '</div><div class="metric-lbl">Pendientes</div></div>' +
+      '</div></div>';
+    const ctxs = ctx.contextos || [];
+    html += '<div class="card"><h4>Contexto</h4><div class="metric"><div class="metric-val">' + ctxs.length + '</div><div class="metric-lbl">Resúmenes guardados</div></div></div>';
     cont.innerHTML = html;
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ SANDBOX AMPLIADO ============
+// ============ SANDBOX ============
 async function cargarSandbox() {
   const contM = document.getElementById('sandbox-metricas');
   const cont = document.getElementById('sandbox-content');
@@ -443,40 +479,53 @@ async function cargarSandbox() {
     const total = esc.length;
     const completados = esc.filter(e => e.completado).length;
     const pendientes = total - completados;
-    const conPuntuacion = esc.filter(e => e.puntuacion != null);
-    const promedio = conPuntuacion.length
-      ? (conPuntuacion.reduce((a, e) => a + e.puntuacion, 0) / conPuntuacion.length).toFixed(1)
-      : '—';
-    const areas = {};
-    esc.forEach(e => { areas[e.tipo] = (areas[e.tipo] || 0) + 1; });
-    const areaTop = Object.entries(areas).sort((a, b) => b[1] - a[1])[0];
+    const estado = d.estado_economico || {};
+    const ap = d.aprendizaje || { dominados: [] };
+    const lim = d.limites_cloudflare || {};
 
-    contM.innerHTML =
-      '<div class="metric-grid">' +
-        '<div class="metric-card"><div class="lbl">Escenarios totales</div><div class="val">' + total + '</div></div>' +
-        '<div class="metric-card"><div class="lbl">Completados</div><div class="val ok">' + completados + '</div></div>' +
-        '<div class="metric-card"><div class="lbl">Pendientes</div><div class="val warn">' + pendientes + '</div></div>' +
-        '<div class="metric-card"><div class="lbl">Puntuación promedio</div><div class="val">' + promedio + '</div></div>' +
-      '</div>' +
-      '<div class="card"><h4>Área más practicada</h4><div class="v">' + (areaTop ? (areaTop[0] + ' (' + areaTop[1] + ' escenarios)') : 'Sin datos aún') + '</div>' +
-      '<h4 style="margin-top:14px">Lecciones aprendidas</h4><div class="v">' + lec.length + ' lecciones guardadas</div></div>';
+    let html = '<div class="metric-grid">' +
+      '<div class="metric-card"><div class="lbl">Shadow-Tokens</div><div class="val ' + (estado.st > 5 ? 'ok' : estado.st > 0 ? 'warn' : '') + '">' + (estado.st || 0).toFixed(2) + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">Usuarios simulados</div><div class="val">' + (estado.usuarios || 0) + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">Escenarios</div><div class="val">' + total + '</div><div class="sub">' + completados + ' resueltos · ' + pendientes + ' pendientes</div></div>' +
+      '<div class="metric-card"><div class="lbl">Temas dominados</div><div class="val ok">' + (ap.dominados || []).length + '</div></div>' +
+      '</div>';
+
+    // Límites CF
+    const limKeys = Object.keys(lim);
+    if (limKeys.length) {
+      html += '<div class="card"><h4>Límites Cloudflare (plan gratuito)</h4>';
+      limKeys.forEach(k => {
+        const info = lim[k];
+        const cls = info.pct > 80 ? 'err' : info.pct > 50 ? 'warn' : 'ok';
+        html += '<div class="stat-row"><span class="stat-name">' + k.replace(/_/g, ' ') + '</span><div class="bar"><div class="bar-i" style="width:' + info.pct + '%;background:' + (info.pct > 80 ? 'var(--err)' : info.pct > 50 ? 'var(--warn)' : 'var(--ok)') + '"></div></div><span class="stat-val">' + info.pct + '%</span></div>';
+      });
+      html += '</div>';
+    }
+
+    // Construcción completada
+    if (d.construccion_completada) {
+      html += '<div class="card"><h4>Shadow Arise construido</h4><div class="v" style="color:var(--ok)">✓ Ayanokōji ya documentó el blueprint completo de Shadow Arise.</div>';
+      if (d.plan_shadow_arise) {
+        html += '<div class="v" style="margin-top:10px;white-space:pre-wrap;font-size:12.5px;max-height:300px;overflow-y:auto;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">' + d.plan_shadow_arise.substring(0, 1500) + '...</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="card"><h4>Construcción pendiente</h4><div class="v" style="color:var(--warn)">Ayanokōji aún no ha construido Shadow Arise. El cron lo hará en los próximos minutos.</div></div>';
+    }
+
+    contM.innerHTML = html;
 
     if (!esc.length) {
-      cont.innerHTML = '<div class="empty">Sin escenarios aún.<br><br>El cron los genera automáticamente cada 2 min.</div>';
+      cont.innerHTML = '<div class="empty">Sin escenarios aún. El cron los genera automáticamente.</div>';
       return;
     }
 
-    const TIPOS = { proyecto:'Proyecto', economico:'Económico', social:'Social', etico:'Ético', publicacion:'Publicación', tactico:'Táctico', monetizacion:'Monetización', x402:'x402', crisis:'Crisis', retencion:'Retención', escalado:'Escalado' };
+    const TIPOS = { proyecto:'Proyecto', economico:'Económico', social:'Social', etico:'Ético', publicacion:'Publicación', tactico:'Táctico', monetizacion:'Monetización', x402:'x402', crisis:'Crisis', retencion:'Retención', escalado:'Escalado', construccion_shadow_arise:'Construcción', limite_cf_real:'Límite CF' };
 
     cont.innerHTML = esc.map(e => {
       const fecha = new Date(e.creado).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-      let punt = '';
-      if (e.puntuacion != null) {
-        const cls = e.puntuacion >= 7 ? 'alta' : e.puntuacion >= 4 ? 'media' : 'baja';
-        punt = '<span class="puntuacion ' + cls + '">' + e.puntuacion + '/10</span>';
-      }
-      const estado = e.completado ? 'Resuelto' : 'Pendiente';
-      return '<div class="item"><div class="k">' + (TIPOS[e.tipo] || e.tipo) + ' · ' + fecha + ' · ' + estado + ' ' + punt + '</div>' +
+      const estadoTxt = e.completado ? 'Resuelto' : 'Pendiente';
+      return '<div class="item"><div class="k">' + (TIPOS[e.tipo] || e.tipo) + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
         '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 800) + '</div>' +
         (e.decision_tomada ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">' +
           '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + e.decision_tomada + '</div>' +
@@ -487,7 +536,7 @@ async function cargarSandbox() {
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ SHADOW ARISE · ESTADO DEL PRODUCTO ============
+// ============ SHADOW ============
 async function cargarShadow() {
   const cont = document.getElementById('shadow-content');
   if (!cont) return;
@@ -495,11 +544,9 @@ async function cargarShadow() {
   try {
     const d = await api('/api/shadow_stats');
     if (d.error) { cont.innerHTML = '<div class="empty">' + d.error + '</div>'; return; }
-
     const s = d.stats || {};
     const escala = d.escala || {};
-    const pasos = ['Prototipo', 'Beta cerrada', 'Lanzamiento público', 'Tracción', 'Escala'];
-
+    const pasos = ['Prototipo', 'Beta cerrada', 'Lanzamiento', 'Tracción', 'Escala'];
     let escalaHtml = '<div class="escala">';
     pasos.forEach((p, i) => {
       const estado = i < escala.actual ? 'completado' : i === escala.actual ? 'activo' : '';
@@ -514,29 +561,18 @@ async function cargarShadow() {
         '<div class="stat-big"><div class="n">' + (s.usuarios_activos_dia || 0) + '</div><div class="l">Activos hoy</div></div>' +
         '<div class="stat-big"><div class="n warn">' + (s.usuarios_nuevos_semana || 0) + '</div><div class="l">Nuevos esta semana</div></div>' +
       '</div>' +
-
-      '<div class="card"><h4>Tasa de conversión</h4>' +
+      '<div class="card"><h4>Conversión</h4>' +
         '<div class="barra-progreso"><div class="fill" style="width:' + (s.conversion_pct || 0) + '%"></div></div>' +
-        '<div class="v" style="margin-top:6px">' + (s.conversion_pct || 0) + '% de usuarios gratis → pago</div></div>' +
-
+        '<div class="v" style="margin-top:6px">' + (s.conversion_pct || 0) + '% gratis → pago</div></div>' +
       '<div class="card"><h4>Retención</h4>' +
         '<div class="v">Día 1: <strong>' + (s.retencion_d1 || 0) + '%</strong></div>' +
-        '<div class="v">Día 7: <strong>' + (s.retencion_d7 || 0) + '%</strong></div>' +
-        '<div class="v">Día 30: <strong>' + (s.retencion_d30 || 0) + '%</strong></div></div>' +
-
+        '<div class="v">Día 7: <strong>' + (s.retencion_d7 || 0) + '%</strong></div></div>' +
       '<div class="card"><h4>Ingresos</h4>' +
-        '<div class="v">Este mes: <strong>' + (s.ingresos_mes || 0) + ' USDT</strong></div>' +
-        '<div class="v">Total acumulado: <strong>' + (s.ingresos_total || 0) + ' USDT</strong></div>' +
+        '<div class="v">Mes: <strong>' + (s.ingresos_mes || 0) + ' USDT</strong></div>' +
+        '<div class="v">Total: <strong>' + (s.ingresos_total || 0) + ' USDT</strong></div>' +
         '<div class="v">ARPU: <strong>' + (s.arpu || 0) + ' USDT</strong></div></div>' +
-
-      '<div class="card"><h4>Personajes</h4>' +
-        '<div class="v">Más usado: <strong>' + (s.personaje_top || '—') + '</strong></div>' +
-        '<div class="v">Más retención: <strong>' + (s.personaje_retencion || '—') + '</strong></div></div>' +
-
       '<div class="card"><h4>Escala del proyecto</h4>' + escalaHtml + '</div>' +
-
-      '<div class="card"><h4>Resumen del sistema</h4>' +
-        '<div class="v">' + (d.resumen_ayanokoji || 'Sin datos aún. Shadow Arise no está operativo.') + '</div></div>';
+      '<div class="card"><h4>Resumen</h4><div class="v">' + (d.resumen_ayanokoji || 'Sin datos aún.') + '</div></div>';
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
@@ -548,7 +584,7 @@ async function cargarDecisiones() {
   try {
     const d = await api('/api/decisiones');
     if (!d.decisiones || !d.decisiones.length) {
-      cont.innerHTML = '<div class="empty">Sin decisiones autónomas aún.<br><br>Cuando Ayanokōji actúe por su cuenta verás sus decisiones aquí.</div>';
+      cont.innerHTML = '<div class="empty">Sin decisiones autónomas aún.</div>';
       return;
     }
     cont.innerHTML = d.decisiones.map(dd => {
@@ -635,6 +671,7 @@ document.getElementById('marcar-leidas')?.addEventListener('click', async () => 
   cargarNotificaciones();
 });
 
+// ============ INIT ============
 checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
