@@ -131,10 +131,37 @@ textarea::placeholder{color:var(--fg3)}
 .scroll-btn.on{display:flex}
 .scroll-btn:hover{background:var(--acc);border-color:var(--acc)}
 
+/* Botón flotante para volver al chat */
+.back-to-chat{
+  position:fixed;
+  bottom:24px;
+  right:20px;
+  z-index:60;
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:24px;
+  background:linear-gradient(135deg,var(--acc),#5a3fe6);
+  border:none;
+  color:#fff;
+  font-size:13.5px;
+  font-weight:500;
+  font-family:inherit;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(122,92,255,.45);
+  transition:.2s;
+  animation:up .3s ease;
+}
+.back-to-chat.on{display:flex}
+.back-to-chat:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(122,92,255,.55)}
+.back-to-chat:active{transform:translateY(0) scale(.96)}
+.back-to-chat svg{width:18px;height:18px}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
 .panel{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;z-index:100;padding:20px 16px;overflow-y:auto;animation:fade .2s}
 .panel.on{display:block}
 .panel-c{background:var(--surface);border:1px solid var(--bd);border-radius:22px;max-width:640px;margin:40px auto 20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:up .25s ease}
-@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .panel-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--bd)}
 .panel-h h3{font-size:16px;font-weight:500;letter-spacing:-.2px}
 .close{background:var(--elev);border:1px solid var(--bd);color:var(--fg2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;line-height:1}
@@ -187,7 +214,6 @@ textarea::placeholder{color:var(--fg3)}
 .decision-card .resultado{font-size:12.5px;padding:8px 10px;border-radius:8px;border-left:2px solid var(--ok)}
 .decision-card .resultado.err{border-left-color:var(--err)}
 
-/* ===== Sandbox métricas ===== */
 .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .metric-card{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:14px}
 .metric-card .lbl{font-size:10.5px;color:var(--fg3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:600}
@@ -202,7 +228,6 @@ textarea::placeholder{color:var(--fg3)}
 .puntuacion.media{background:rgba(251,191,36,.12);color:var(--warn)}
 .puntuacion.baja{background:rgba(248,113,113,.12);color:var(--err)}
 
-/* ===== Shadow stats ===== */
 .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .stat-big{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:16px;text-align:center}
 .stat-big .n{font-size:28px;font-weight:600;letter-spacing:-.5px;color:var(--fg)}
