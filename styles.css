@@ -19,6 +19,7 @@ body{
 ::-webkit-scrollbar-thumb{background:var(--bd-hi);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--fg3)}
 
+/* ============ HEADER ============ */
 header{
   padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
   border-bottom:1px solid var(--bd);
@@ -44,12 +45,14 @@ header{
 .dot.on{background:var(--ok);animation:pulse 2.4s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.5)}50%{box-shadow:0 0 0 5px rgba(74,222,128,0)}}
 
-.tabs{display:flex;gap:3px;background:var(--elev);padding:3px;border-radius:10px;border:1px solid var(--bd);flex-shrink:0}
+.tabs{display:flex;gap:3px;background:var(--elev);padding:3px;border-radius:10px;border:1px solid var(--bd);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
 .tab{background:transparent;border:none;color:var(--fg2);padding:5px 11px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap;position:relative}
 .tab:hover{color:var(--fg)}
 .tab.active{background:var(--elev2);color:var(--fg);font-weight:500}
 .badge{display:inline-block;background:var(--err);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-weight:600}
 
+/* ============ MAIN ============ */
 main{flex:1;overflow:hidden;position:relative}
 .view{display:none;height:100%;overflow-y:auto;padding:24px 20px 12px}
 .view.active{display:block}
@@ -68,6 +71,7 @@ main{flex:1;overflow:hidden;position:relative}
 .chip{background:var(--elev);border:1px solid var(--bd);color:var(--fg2);padding:8px 14px;border-radius:20px;font-size:12.5px;cursor:pointer;transition:.15s;font-family:inherit}
 .chip:hover,.chip:active{border-color:var(--acc);color:var(--fg);background:var(--elev2)}
 
+/* ============ MENSAJES ============ */
 .msg{max-width:85%;padding:11px 15px;border-radius:12px;font-size:14.5px;line-height:1.6;word-wrap:break-word;animation:fade .3s ease;position:relative}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .msg.u{align-self:flex-end;background:linear-gradient(135deg,#2a1d5a,#3d2a7a);color:#ece6ff;border:1px solid rgba(155,131,255,.2);border-bottom-right-radius:4px}
@@ -97,12 +101,14 @@ main{flex:1;overflow:hidden;position:relative}
 .corregir-btn{background:transparent;border:1px solid var(--bd);color:var(--fg3);padding:3px 8px;border-radius:6px;font-size:10.5px;cursor:pointer;margin-top:6px;font-family:inherit;transition:.15s}
 .corregir-btn:hover{border-color:var(--acc);color:var(--acc-hi)}
 
+/* ============ FOOTER ============ */
 footer{
   border-top:1px solid var(--bd);background:var(--surface);
   padding:12px 16px 14px;flex-shrink:0;
   padding-bottom:max(14px,env(safe-area-inset-bottom));
 }
 body[data-view="sandbox"] #footer,
+body[data-view="estrategias"] #footer,
 body[data-view="shadow"] #footer,
 body[data-view="stats"] #footer,
 body[data-view="ideas"] #footer,
@@ -127,11 +133,11 @@ textarea::placeholder{color:var(--fg3)}
 .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:0 4px;font-size:11px;color:var(--fg3)}
 .meta kbd{background:var(--elev);border:1px solid var(--bd);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10px}
 
+/* ============ SCROLL Y BOTÓN FLOTANTE ============ */
 .scroll-btn{position:fixed;bottom:130px;right:20px;width:36px;height:36px;border-radius:50%;background:var(--elev2);border:1px solid var(--bd-hi);color:var(--fg);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.4);transition:.2s}
 .scroll-btn.on{display:flex}
 .scroll-btn:hover{background:var(--acc);border-color:var(--acc)}
 
-/* Botón flotante para volver al chat */
 .back-to-chat{
   position:fixed;
   bottom:24px;
@@ -159,6 +165,7 @@ textarea::placeholder{color:var(--fg3)}
 .back-to-chat svg{width:18px;height:18px}
 @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
+/* ============ PANEL ============ */
 .panel{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;z-index:100;padding:20px 16px;overflow-y:auto;animation:fade .2s}
 .panel.on{display:block}
 .panel-c{background:var(--surface);border:1px solid var(--bd);border-radius:22px;max-width:640px;margin:40px auto 20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:up .25s ease}
@@ -167,6 +174,7 @@ textarea::placeholder{color:var(--fg3)}
 .close{background:var(--elev);border:1px solid var(--bd);color:var(--fg2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;line-height:1}
 .close:hover{background:var(--elev2);color:var(--fg)}
 
+/* ============ ITEMS GENÉRICOS ============ */
 .item{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;transition:.15s}
 .item:hover{border-color:var(--bd-hi)}
 .item .k{color:var(--fg3);font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;font-weight:600}
@@ -182,10 +190,12 @@ textarea::placeholder{color:var(--fg3)}
 .fase{background:var(--elev2);border-left:2px solid var(--acc);padding:8px 12px;border-radius:0 8px 8px 0}
 .fase .k{color:var(--acc-hi);font-size:10.5px;margin-bottom:3px}
 
+/* ============ SECCIONES ============ */
 .section-head{padding:16px 0 20px}
 .section-head h3{font-size:20px;font-weight:500;letter-spacing:-.3px;margin-bottom:4px}
 .section-head .sub{font-size:13px;color:var(--fg2)}
 
+/* ============ CARDS Y MÉTRICAS ============ */
 .card{background:var(--elev);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px}
 .card h4{font-size:13px;font-weight:500;color:var(--fg2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
 .stat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -200,12 +210,14 @@ textarea::placeholder{color:var(--fg3)}
 .metric-val.err{color:var(--err)}
 .metric-lbl{font-size:11px;color:var(--fg3);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
 
+/* ============ IDEAS ============ */
 .idea-box{background:var(--elev);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:16px}
 .idea-box textarea{width:100%;background:transparent;border:none;color:var(--fg);font-family:inherit;font-size:14px;resize:none;outline:none;padding:6px 0;min-height:70px}
 .idea-box textarea::placeholder{color:var(--fg3)}
 .idea-box button{background:var(--acc);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
 .idea-box button:hover{background:var(--acc-hi)}
 
+/* ============ DECISIONES ============ */
 .decision-card{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px}
 .decision-card .tipo{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;background:var(--elev2);color:var(--acc-hi);margin-bottom:8px}
 .decision-card .fecha{float:right;font-size:11px;color:var(--fg3)}
@@ -214,6 +226,7 @@ textarea::placeholder{color:var(--fg3)}
 .decision-card .resultado{font-size:12.5px;padding:8px 10px;border-radius:8px;border-left:2px solid var(--ok)}
 .decision-card .resultado.err{border-left-color:var(--err)}
 
+/* ============ SANDBOX MÉTRICAS ============ */
 .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .metric-card{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:14px}
 .metric-card .lbl{font-size:10.5px;color:var(--fg3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:600}
@@ -228,6 +241,7 @@ textarea::placeholder{color:var(--fg3)}
 .puntuacion.media{background:rgba(251,191,36,.12);color:var(--warn)}
 .puntuacion.baja{background:rgba(248,113,113,.12);color:var(--err)}
 
+/* ============ SHADOW STATS ============ */
 .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
 .stat-big{background:var(--elev);border:1px solid var(--bd);border-radius:12px;padding:16px;text-align:center}
 .stat-big .n{font-size:28px;font-weight:600;letter-spacing:-.5px;color:var(--fg)}
@@ -244,8 +258,172 @@ textarea::placeholder{color:var(--fg3)}
 .escala .paso.activo{border-top-color:var(--acc);color:var(--acc-hi);font-weight:600}
 .escala .paso.completado{border-top-color:var(--ok);color:var(--ok)}
 
+/* ============ ESTRATEGIAS ============ */
+.estrategia-box {
+  background: var(--elev);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+.estrategia-box textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  padding: 6px 0;
+  min-height: 90px;
+  line-height: 1.5;
+}
+.estrategia-box textarea::placeholder { color: var(--fg3); }
+.estrategia-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.estrategia-acciones select {
+  background: var(--elev2);
+  border: 1px solid var(--bd);
+  color: var(--fg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.estrategia-acciones button {
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: .15s;
+}
+.estrategia-acciones button:hover { background: var(--acc-hi); }
+
+.estrategia-card {
+  background: var(--elev);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.estrategia-card .tipo {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  background: var(--elev2);
+  color: var(--acc-hi);
+  margin-bottom: 8px;
+}
+.estrategia-card .fecha {
+  float: right;
+  font-size: 11px;
+  color: var(--fg3);
+}
+.estrategia-card .texto {
+  font-size: 13.5px;
+  color: var(--fg);
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+  line-height: 1.55;
+}
+.estrategia-card .acciones {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid var(--bd);
+}
+.estrategia-card .acciones button {
+  background: transparent;
+  border: 1px solid var(--bd);
+  color: var(--fg2);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: .15s;
+}
+.estrategia-card .acciones button:hover {
+  border-color: var(--acc);
+  color: var(--acc-hi);
+}
+.estrategia-card .acciones button.primary {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+}
+.estrategia-card .acciones button.primary:hover {
+  background: var(--acc-hi);
+  border-color: var(--acc-hi);
+}
+
+/* ============ CAPACIDAD REAL CLOUDFLARE ============ */
+.cf-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.cf-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.cf-nombre {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--fg2);
+  min-width: 110px;
+}
+.cf-barra {
+  flex: 2;
+  height: 6px;
+  background: var(--elev2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cf-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: .4s;
+}
+.cf-fill.ok { background: linear-gradient(90deg, #4ade80, #22c55e); }
+.cf-fill.warn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+.cf-fill.err { background: linear-gradient(90deg, #f87171, #dc2626); }
+.cf-val {
+  font-size: 11.5px;
+  color: var(--fg);
+  min-width: 90px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.cf-timestamp {
+  font-size: 11px;
+  color: var(--fg3);
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ============ OCULTOS ============ */
 #file{display:none}
 
+/* ============ RESPONSIVE ============ */
 @media(min-width:720px){
   #view-chat .log{padding:32px 40px 16px}
   footer{padding:14px 40px 16px}
@@ -254,7 +432,9 @@ textarea::placeholder{color:var(--fg3)}
 }
 @media(max-width:620px){
   header{flex-wrap:wrap;padding:10px 12px;gap:8px}
-  .tabs{order:3;width:100%;justify-content:center;overflow-x:auto}
+  .tabs{order:3;width:100%;justify-content:flex-start}
   .brand b,.brand span{font-size:13px}
   .tab{padding:5px 9px;font-size:11.5px}
+  .cf-nombre{font-size:11.5px;min-width:90px}
+  .cf-val{font-size:11px;min-width:80px}
 }
