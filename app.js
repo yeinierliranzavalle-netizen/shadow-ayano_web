@@ -42,7 +42,9 @@ async function registrarConciencia(accion, detalle, pestana) {
   } catch (e) {}
 }
 
-// ============ NAVEGACIÓN ============
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
 function cambiarVista(v) {
   if (v === currentView) return;
   if (currentView === 'chat' && log) scrollChatGuardado = log.scrollTop;
@@ -70,7 +72,9 @@ function cambiarVista(v) {
 tabs.forEach(t => t.addEventListener('click', () => cambiarVista(t.dataset.view)));
 backToChat.addEventListener('click', () => cambiarVista('chat'));
 
-// ============ UTILIDADES ============
+// ============================================================
+// UTILIDADES
+// ============================================================
 function addCopyButton(pre) {
   if (pre.querySelector('.copy-btn')) return;
   const btn = document.createElement('button');
@@ -250,7 +254,9 @@ async function cargarHistorialLargo() {
   } catch (e) {}
 }
 
-// ============ BOTONES ============
+// ============================================================
+// BOTONES
+// ============================================================
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
 document.getElementById('btnImagen')?.addEventListener('click', async () => {
@@ -341,7 +347,9 @@ fileIn.addEventListener('change', async () => {
   fileIn.value = '';
 });
 
-// ============ PANEL ============
+// ============================================================
+// PANEL
+// ============================================================
 function abrirPanel(titulo) { panelT.textContent = titulo; panel.classList.add('on'); }
 function cerrarPanel() {
   panel.classList.remove('on');
@@ -401,7 +409,9 @@ document.getElementById('btnReset').addEventListener('click', async () => {
   } catch (e) { add('Error: ' + e.message, 'e'); }
 });
 
-// ============ STATS con capacidad REAL ============
+// ============================================================
+// STATS con capacidad REAL
+// ============================================================
 async function cargarStats() {
   const cont = document.getElementById('stats-content');
   if (!cont) return;
@@ -415,7 +425,6 @@ async function cargarStats() {
 
     let html = '';
 
-    // Capacidad real Cloudflare
     if (cap && cap.limites_cloudflare) {
       const lim = cap.limites_cloudflare;
       const items = [
@@ -446,7 +455,6 @@ async function cargarStats() {
       }
       html += '</div>';
 
-      // Estado de procesos
       html += '<div class="card"><h4>Estado</h4>' +
         '<div class="grid-3">' +
         '<div class="metric"><div class="metric-val">' + (cap.procesos_activos || 0) + '</div><div class="metric-lbl">Procesos activos</div></div>' +
@@ -459,7 +467,6 @@ async function cargarStats() {
       html += '<div class="card"><h4>Capacidad Cloudflare</h4><div class="v" style="color:var(--err)">No se pudo consultar la capacidad real. Verifica CF_API_TOKEN y CF_ACCOUNT_ID.</div></div>';
     }
 
-    // Procesos
     const procesos = proc.procesos || [];
     html += '<div class="card"><h4>Procesos</h4><div class="grid-3">' +
       '<div class="metric"><div class="metric-val">' + procesos.filter(p => p.estado === 'procesando').length + '</div><div class="metric-lbl">Activos</div></div>' +
@@ -467,7 +474,6 @@ async function cargarStats() {
       '<div class="metric"><div class="metric-val err">' + procesos.filter(p => p.estado === 'error').length + '</div><div class="metric-lbl">Errores</div></div>' +
       '</div></div>';
 
-    // Contexto
     const ctxs = ctx.contextos || [];
     html += '<div class="card"><h4>Contexto</h4><div class="metric"><div class="metric-val">' + ctxs.length + '</div><div class="metric-lbl">Resúmenes guardados</div></div></div>';
 
@@ -475,7 +481,9 @@ async function cargarStats() {
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ SANDBOX ============
+// ============================================================
+// SANDBOX con currículum unificado
+// ============================================================
 async function cargarSandbox() {
   const contM = document.getElementById('sandbox-metricas');
   const cont = document.getElementById('sandbox-content');
@@ -490,22 +498,30 @@ async function cargarSandbox() {
     const completados = esc.filter(e => e.completado).length;
     const pendientes = total - completados;
     const estado = d.estado_economico || {};
-    const ap = d.aprendizaje || { dominados: [] };
     const cap = d.capacidad_real_cloudflare;
+    const cur = d.curriculum || {};
 
     let html = '<div class="metric-grid">' +
       '<div class="metric-card"><div class="lbl">Shadow-Tokens</div><div class="val ' + (estado.st > 5 ? 'ok' : estado.st > 0 ? 'warn' : '') + '">' + (estado.st || 0).toFixed(2) + '</div><div class="sub">Simulan USDT</div></div>' +
       '<div class="metric-card"><div class="lbl">Usuarios simulados</div><div class="val">' + (estado.usuarios || 0) + '</div></div>' +
       '<div class="metric-card"><div class="lbl">Escenarios</div><div class="val">' + total + '</div><div class="sub">' + completados + ' resueltos · ' + pendientes + ' pendientes</div></div>' +
-      '<div class="metric-card"><div class="lbl">Temas dominados</div><div class="val ok">' + (ap.dominados || []).length + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">Progreso currículum</div><div class="val ok">' + (cur.progreso_pct || 0) + '%</div><div class="sub">' + (cur.completadas?.length || 0) + ' / ' + (cur.total_etapas || 33) + '</div></div>' +
       '</div>';
+
+    // Barra de progreso del currículum
+    if (cur.total_etapas) {
+      html += '<div class="card"><h4>Progreso del currículum</h4>' +
+        '<div class="barra-progreso"><div class="fill" style="width:' + (cur.progreso_pct || 0) + '%"></div></div>' +
+        '<div class="v" style="margin-top:6px;text-align:center;font-size:12.5px">' + (cur.completadas?.length || 0) + ' de ' + cur.total_etapas + ' etapas completadas</div>' +
+        (cur.etapa_actual ? '<div class="v" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);font-size:13px"><strong>Etapa actual:</strong> ' + cur.etapa_actual.id + ' (fase ' + cur.etapa_actual.fase + ', prioridad ' + cur.etapa_actual.prioridad + '/10, día ' + cur.etapa_actual.dia + '/' + cur.etapa_actual.dias_total + ')<div style="color:var(--fg2);font-size:12px;margin-top:4px">' + cur.etapa_actual.descripcion + '</div><div style="color:var(--acc-hi);font-size:12px;margin-top:6px">Métrica: ' + cur.etapa_actual.metrica + ' ≥ ' + cur.etapa_actual.umbral + '</div></div>' : '') +
+        '</div>';
+    }
 
     // Capacidad real
     if (cap) {
       html += '<div class="card"><h4>Capacidad real Cloudflare</h4><div class="cf-grid">';
       const items = [
         { key: 'workers_requests', nombre: 'Workers requests' },
-        { key: 'workers_subrequests', nombre: 'Subrequests' },
         { key: 'd1_reads', nombre: 'D1 reads' },
         { key: 'd1_writes', nombre: 'D1 writes' },
         { key: 'kv_reads', nombre: 'KV reads' },
@@ -525,45 +541,61 @@ async function cargarSandbox() {
       html += '</div></div>';
     }
 
-    // Currículum actual
-    if (d.curriculum_actual) {
-      const c = d.curriculum_actual;
-      html += '<div class="card"><h4>Currículum actual</h4>' +
-        '<div class="v"><strong>Fase ' + c.fase + '</strong> · ' + c.tema + '</div>' +
-        '<div class="v" style="color:var(--fg2);font-size:12.5px;margin-top:6px">' + c.descripcion + '</div>' +
-        '</div>';
-    }
-
-    // Dominados
-    if (ap.dominados && ap.dominados.length) {
-      html += '<div class="card"><h4>Temas dominados</h4><div class="v">' +
-        ap.dominados.map(t => '✓ ' + t).join('<br>') + '</div></div>';
-    }
-
     contM.innerHTML = html;
 
+    // Lista de etapas del currículum
+    if (cur.todas_las_etapas && cur.todas_las_etapas.length) {
+      const fases = {};
+      cur.todas_las_etapas.forEach(et => {
+        if (!fases[et.fase]) fases[et.fase] = [];
+        fases[et.fase].push(et);
+      });
+
+      const FASES_NOMBRE = { 0: 'Autoconocimiento', 1: 'Economía', 2: 'Operación', 3: 'Crisis', 4: 'Crecimiento', 5: 'Estratégico', 6: 'Pruebas grandes' };
+
+      let etapasHtml = '';
+      for (const [fase, lista] of Object.entries(fases).sort((a, b) => a[0] - b[0])) {
+        etapasHtml += '<div class="card"><h4>Fase ' + fase + ' · ' + (FASES_NOMBRE[fase] || '') + '</h4>';
+        lista.forEach(et => {
+          const cls = et.completada ? 'ok' : (cur.etapa_actual && cur.etapa_actual.id === et.id) ? 'warn' : '';
+          const icono = et.completada ? '✓' : (cur.etapa_actual && cur.etapa_actual.id === et.id) ? '▶' : '○';
+          etapasHtml += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">' +
+            '<span style="color:' + (cls === 'ok' ? 'var(--ok)' : cls === 'warn' ? 'var(--warn)' : 'var(--fg3)') + ';font-size:14px;min-width:20px">' + icono + '</span>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:13px;color:var(--fg)">' + et.id + '</div>' +
+              '<div style="font-size:11px;color:var(--fg3);margin-top:2px">P' + et.prioridad + ' · ' + et.dias + 'd · ' + et.metrica + (et.metrica_actual != null ? ' = ' + et.metrica_actual : '') + '</div>' +
+            '</div>' +
+          '</div>';
+        });
+        etapasHtml += '</div>';
+      }
+      contM.innerHTML += '<div style="margin-top:20px"><h3 style="font-size:16px;font-weight:500;margin-bottom:12px;color:var(--fg2)">Currículum completo (' + cur.total_etapas + ' etapas)</h3>' + etapasHtml + '</div>';
+    }
+
+    // Escenarios recientes
     if (!esc.length) {
-      cont.innerHTML = '<div class="empty">Sin escenarios aún. El cron los genera automáticamente. Vuelve en unos minutos.</div>';
+      cont.innerHTML = '<div class="empty">Sin escenarios aún. El cron los genera automáticamente.</div>';
       return;
     }
 
-    const TIPOS = { proyecto:'Proyecto', economico:'Económico', social:'Social', etico:'Ético', publicacion:'Publicación', tactico:'Táctico', monetizacion:'Monetización', x402:'x402', crisis:'Crisis', retencion:'Retención', escalado:'Escalado', preparacion_shadow_arise:'Preparación', limite_cf_real:'Límite CF' };
-
-    cont.innerHTML = esc.map(e => {
+    const TIPOS = { limite_cf_real:'Límite CF' };
+    cont.innerHTML = '<h3 style="font-size:16px;font-weight:500;margin-bottom:12px;color:var(--fg2)">Escenarios recientes</h3>' + esc.slice(0, 10).map(e => {
       const fecha = new Date(e.creado).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       const estadoTxt = e.completado ? 'Resuelto' : 'Pendiente';
-      return '<div class="item"><div class="k">' + (TIPOS[e.tipo] || e.tipo) + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
-        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 800) + '</div>' +
+      const tipo = TIPOS[e.tipo] || (e.tipo.startsWith('etapa_') ? e.tipo.replace('etapa_', '') : e.tipo);
+      return '<div class="item"><div class="k">' + tipo + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
+        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 600) + '</div>' +
         (e.decision_tomada ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">' +
-          '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + e.decision_tomada + '</div>' +
-          '<div class="k" style="margin-top:8px;color:var(--warn)">Resultado simulado</div><div class="v" style="font-size:12.5px">' + (e.resultado || '').substring(0, 700) + '</div>' +
-          (e.autoevaluacion ? '<div class="k" style="margin-top:8px;color:var(--ok)">Autoevaluación</div><div class="v" style="font-size:12.5px">' + e.autoevaluacion.substring(0, 700) + '</div>' : '') +
+          '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + (e.decision_tomada || '').substring(0, 500) + '</div>' +
+          (e.autoevaluacion ? '<div class="k" style="margin-top:8px;color:var(--ok)">Autoevaluación</div><div class="v" style="font-size:12.5px">' + e.autoevaluacion.substring(0, 500) + '</div>' : '') +
           '</div>' : '') + '</div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ ESTRATEGIAS ============
+// ============================================================
+// ESTRATEGIAS
+// ============================================================
 async function cargarEstrategias() {
   const cont = document.getElementById('estrategias-content');
   if (!cont) return;
@@ -583,13 +615,12 @@ async function cargarEstrategias() {
         '<div class="texto">' + (e.contenido || '') + '</div>' +
         '<div class="acciones">' +
           '<button class="primary" data-simular="' + e.id + '">🧪 Simular en sandbox</button>' +
-          '<button data-publicar="' + e.id + '">📤 Enviar al chat</button>' +
+          '<button data-publicar="' + e.id + '">💬 Enviar al chat</button>' +
           '<button data-eliminar="' + e.id + '">🗑️ Eliminar</button>' +
         '</div>' +
         '</div>';
     }).join('');
 
-    // Handlers
     cont.querySelectorAll('button[data-simular]').forEach(b => {
       b.addEventListener('click', () => simularEstrategia(b.dataset.simular));
     });
@@ -641,7 +672,7 @@ async function simularEstrategia(id) {
     });
     const d = await r.json();
     if (d.error) return alert('Error: ' + d.error);
-    alert('Estrategia enviada al sandbox. En 2-3 minutos Ayanokōji la habrá simulado. Revisa la pestaña Sandbox.');
+    alert('Estrategia enviada al sandbox. En 30-60 segundos Ayanokōji la habrá simulado. Revisa la pestaña Sandbox.');
     cambiarVista('sandbox');
   } catch (e) { alert('Error: ' + e.message); }
 }
@@ -656,7 +687,9 @@ async function eliminarEstrategia(id) {
 
 document.getElementById('estrategia-save')?.addEventListener('click', guardarEstrategia);
 
-// ============ SHADOW ============
+// ============================================================
+// SHADOW
+// ============================================================
 async function cargarShadow() {
   const cont = document.getElementById('shadow-content');
   if (!cont) return;
@@ -696,7 +729,9 @@ async function cargarShadow() {
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ DECISIONES ============
+// ============================================================
+// DECISIONES
+// ============================================================
 async function cargarDecisiones() {
   const cont = document.getElementById('decisiones-content');
   if (!cont) return;
@@ -721,7 +756,9 @@ async function cargarDecisiones() {
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============ IDEAS ============
+// ============================================================
+// IDEAS
+// ============================================================
 async function cargarIdeas() {
   const cont = document.getElementById('ideas-content');
   if (!cont) return;
@@ -760,7 +797,9 @@ document.getElementById('idea-save')?.addEventListener('click', async () => {
   } catch (e) { alert('Error: ' + e.message); }
 });
 
-// ============ BANDEJA ============
+// ============================================================
+// BANDEJA
+// ============================================================
 async function cargarNotificaciones() {
   const cont = document.getElementById('notif-content');
   if (!cont) return;
@@ -791,7 +830,9 @@ document.getElementById('marcar-leidas')?.addEventListener('click', async () => 
   cargarNotificaciones();
 });
 
-// ============ INIT ============
+// ============================================================
+// INIT
+// ============================================================
 checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
