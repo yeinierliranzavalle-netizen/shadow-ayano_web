@@ -19,6 +19,7 @@
     <button class="tab" data-view="estrategias">Estrategias</button>
     <button class="tab" data-view="shadow">Shadow</button>
     <button class="tab" data-view="stats">Stats</button>
+    <button class="tab" data-view="actividad">Actividad</button>
     <button class="tab" data-view="decisiones">Decisiones</button>
     <button class="tab" data-view="ideas">Ideas</button>
     <button class="tab" data-view="bandeja">Bandeja <span id="notif-badge" class="badge" style="display:none">0</span></button>
@@ -51,7 +52,7 @@
   <section id="view-sandbox" class="view">
     <div class="section-head">
       <h3>Sandbox de Entrenamiento</h3>
-      <p class="sub">Ayanokōji practica decisiones con datos reales de Cloudflare. Tú ves su progreso.</p>
+      <p class="sub">Ayanokōji practica decisiones. Tú ves su progreso, sus aciertos y sus áreas débiles.</p>
     </div>
     <div id="sandbox-metricas"></div>
     <div id="sandbox-content"></div>
@@ -59,22 +60,23 @@
 
   <section id="view-estrategias" class="view">
     <div class="section-head">
-      <h3>Estrategias</h3>
-      <p class="sub">Escribe una estrategia. Ayanokōji la leerá, la entenderá, y la simulará en el sandbox para probarla antes de aplicarla.</p>
+      <h3>Estrategias Activas</h3>
+      <p class="sub">Las reglas que Ayanokōji sigue. Puedes añadir, eliminar y simularlas en el sandbox.</p>
     </div>
-    <div class="estrategia-box">
-      <textarea id="estrategia-input" placeholder="Escribe aquí la estrategia que quieres que Ayanokōji simule. Ej: 'Publicar 3 veces al día en Mastodon con frases cortas y provocadoras, medir retención a 7 días...'" rows="5"></textarea>
-      <div class="estrategia-acciones">
-        <select id="estrategia-tipo">
-          <option value="publicacion">Publicación</option>
-          <option value="retencion">Retención</option>
-          <option value="monetizacion">Monetización</option>
-          <option value="contenido">Contenido</option>
-          <option value="viralidad">Viralidad</option>
-          <option value="general">General</option>
-        </select>
-        <button id="estrategia-save">Guardar estrategia</button>
-      </div>
+    <div class="idea-box">
+      <input type="text" id="estr-nombre" placeholder="Nombre de la estrategia" style="width:100%;background:transparent;border:none;color:var(--fg);font-family:inherit;font-size:14px;outline:none;padding:6px 0;border-bottom:1px solid var(--bd);margin-bottom:10px">
+      <select id="estr-tipo" style="width:100%;background:var(--elev);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:8px;font-family:inherit;font-size:13px;margin-bottom:10px">
+        <option value="publicacion">Publicación</option>
+        <option value="narrativa">Narrativa</option>
+        <option value="monetizacion">Monetización</option>
+        <option value="psicologia">Psicología</option>
+        <option value="sandbox">Sandbox</option>
+        <option value="retencion">Retención</option>
+        <option value="canales">Canales</option>
+        <option value="general">General</option>
+      </select>
+      <textarea id="estr-contenido" placeholder="Contenido de la estrategia..." rows="3"></textarea>
+      <button id="estr-save">Añadir estrategia</button>
     </div>
     <div id="estrategias-content"></div>
   </section>
@@ -90,9 +92,19 @@
   <section id="view-stats" class="view">
     <div class="section-head">
       <h3>Estado del Sistema</h3>
-      <p class="sub">Capacidad REAL de Cloudflare (GraphQL) + presupuesto local + procesos.</p>
+      <p class="sub">Uso real de Cloudflare, procesos, contexto y presupuesto interno.</p>
     </div>
+    <div id="uso-real-content"></div>
     <div id="stats-content"></div>
+  </section>
+
+  <section id="view-actividad" class="view">
+    <div class="section-head">
+      <h3>Actividad en vivo</h3>
+      <p class="sub">Lo que Ayanokōji está haciendo ahora mismo. Se actualiza cada 15 segundos.</p>
+    </div>
+    <div id="actividad-live"></div>
+    <div id="actividad-content"></div>
   </section>
 
   <section id="view-decisiones" class="view">
