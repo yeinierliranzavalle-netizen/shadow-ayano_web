@@ -59,6 +59,7 @@ function cambiarVista(v) {
   if (v === 'stats') cargarStats();
   if (v === 'sandbox') cargarSandbox();
   if (v === 'estrategias') cargarEstrategias();
+  if (v === 'actividad') cargarActividad();
   if (v === 'ideas') cargarIdeas();
   if (v === 'bandeja') cargarNotificaciones();
   if (v === 'decisiones') cargarDecisiones();
@@ -413,76 +414,95 @@ document.getElementById('btnReset').addEventListener('click', async () => {
 // STATS con capacidad REAL
 // ============================================================
 async function cargarStats() {
+  const contUso = document.getElementById('uso-real-content');
   const cont = document.getElementById('stats-content');
-  if (!cont) return;
+  if (!cont || !contUso) return;
+
+  contUso.innerHTML = '<div class="empty">cargando uso real...</div>';
   cont.innerHTML = '<div class="empty">cargando...</div>';
+
+  // === Uso real de Cloudflare ===
   try {
-    const [cap, proc, ctx] = await Promise.all([
-      api('/api/capacidades').catch(() => ({})),
-      api('/api/proceso').catch(() => ({ procesos: [] })),
-      api('/api/contexto').catch(() => ({ contextos: [] }))
-    ]);
-
-    let html = '';
-
-    if (cap && cap.limites_cloudflare) {
-      const lim = cap.limites_cloudflare;
-      const items = [
-        { key: 'workers_requests', nombre: 'Workers requests' },
-        { key: 'workers_subrequests', nombre: 'Subrequests' },
-        { key: 'd1_reads', nombre: 'D1 reads' },
-        { key: 'd1_writes', nombre: 'D1 writes' },
-        { key: 'kv_reads', nombre: 'KV reads' },
-        { key: 'kv_writes', nombre: 'KV writes' }
+    const d = await api('/api/capacidades');
+    if (d.error || !d.ok) {
+      contUso.innerHTML = '<div class="card"><h4>Uso Cloudflare</h4><div class="empty">' + (d.error || 'Sin datos') + '</div></div>';
+    } else {
+      const lim = d.limites_cloudflare || {};
+      const fecha = new Date(d.fecha_consulta).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      let html = '<div class="card"><h4>Uso Cloudflare hoy · ' + fecha + '</h4>';
+      const recursos = [
+        ['workers_requests', 'Workers requests'],
+        ['d1_reads', 'D1 reads'],
+        ['d1_writes', 'D1 writes'],
+        ['kv_reads', 'KV reads'],
+        ['kv_writes', 'KV writes']
       ];
-
-      html += '<div class="card"><h4>Capacidad REAL de Cloudflare (hoy)</h4><div class="cf-grid">';
-      items.forEach(it => {
-        const d = lim[it.key];
-        if (!d) return;
-        const pct = d.pct != null ? d.pct : 0;
-        const cls = pct > 80 ? 'err' : pct > 50 ? 'warn' : 'ok';
-        html += '<div class="cf-row">' +
-          '<span class="cf-nombre">' + it.nombre + '</span>' +
-          '<div class="cf-barra"><div class="cf-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
-          '<span class="cf-val">' + (d.usado || 0).toLocaleString() + ' / ' + (d.limite || 0).toLocaleString() + ' · ' + pct + '%</span>' +
-          '</div>';
-      });
-      html += '</div>';
-      if (cap.fecha_consulta) {
-        const t = new Date(cap.fecha_consulta).toLocaleTimeString('es-ES');
-        html += '<div class="cf-timestamp">Actualizado a las ' + t + (cap.consulta_real ? ' · datos reales' : ' · sin datos reales') + '</div>';
+      for (const [clave, nombre] of recursos) {
+        const info = lim[clave];
+        if (!info) continue;
+        const pct = info.pct != null ? info.pct : (info.usado ? Math.round(info.usado / info.limite * 100) : 0);
+        const color = pct > 80 ? 'var(--err)' : pct > 50 ? 'var(--warn)' : 'var(--ok)';
+        html += '<div class="stat-row"><span class="stat-name">' + nombre + '</span>' +
+          '<div class="bar"><div class="bar-i" style="width:' + Math.min(pct, 100) + '%;background:' + color + '"></div></div>' +
+          '<span class="stat-val">' + (info.usado || 0).toLocaleString() + '/' + info.limite.toLocaleString() + '</span></div>';
+      }
+      if (lim.workers_errores) {
+        html += '<div class="stat-row"><span class="stat-name">Workers errores</span><span class="stat-val" style="color:var(--err)">' + (lim.workers_errores.usado || 0) + '</span></div>';
+      }
+      if (lim.workers_subrequests) {
+        html += '<div class="stat-row"><span class="stat-name">Subrequests</span><span class="stat-val">' + (lim.workers_subrequests.usado || 0).toLocaleString() + '</span></div>';
       }
       html += '</div>';
 
-      html += '<div class="card"><h4>Estado</h4>' +
-        '<div class="grid-3">' +
-        '<div class="metric"><div class="metric-val">' + (cap.procesos_activos || 0) + '</div><div class="metric-lbl">Procesos activos</div></div>' +
-        '<div class="metric"><div class="metric-val">' + (cap.mensajes_historial || 0) + '</div><div class="metric-lbl">Mensajes historial</div></div>' +
-        '<div class="metric"><div class="metric-val">' + (cap.temas_indexados || 0) + '</div><div class="metric-lbl">Temas indexados</div></div>' +
-        '</div>' +
-        '<div class="v" style="margin-top:10px;text-align:center;color:var(--fg3);font-size:12px">Modo índice: ' + (cap.modo_indice || 'ninguno') + '</div>' +
+      html += '<div class="card"><h4>Estado del sistema</h4>' +
+        '<div class="v">Procesos activos: <strong>' + (d.procesos_activos || 0) + '</strong></div>' +
+        '<div class="v">Mensajes en historial: <strong>' + (d.mensajes_historial || 0) + '</strong></div>' +
+        '<div class="v">Temas indexados: <strong>' + (d.temas_indexados || 0) + '</strong></div>' +
+        '<div class="v">Modo índice: <strong>' + (d.modo_indice || 'ninguno') + '</strong></div>' +
         '</div>';
-    } else {
-      html += '<div class="card"><h4>Capacidad Cloudflare</h4><div class="v" style="color:var(--err)">No se pudo consultar la capacidad real. Verifica CF_API_TOKEN y CF_ACCOUNT_ID.</div></div>';
-    }
 
+      contUso.innerHTML = html;
+    }
+  } catch (e) {
+    contUso.innerHTML = '<div class="card"><h4>Uso Cloudflare</h4><div class="empty">Error: ' + e.message + '</div></div>';
+  }
+
+  // === Stats locales ===
+  try {
+    const [pres, proc, pub, ctx] = await Promise.all([
+      api('/api/presupuesto').catch(() => ({})),
+      api('/api/proceso').catch(() => ({ procesos: [] })),
+      api('/api/publicaciones').catch(() => ({ publicaciones: [] })),
+      api('/api/contexto').catch(() => ({ contextos: [] }))
+    ]);
+    let html = '<div class="card"><h4>Presupuesto interno diario</h4>';
+    ['chat','procesamiento','sandbox','publisher','vision'].forEach(a => {
+      const p = pres[a] || { usado: 0, limite: 50 };
+      const pct = Math.round((p.usado / p.limite) * 100);
+      html += '<div class="stat-row"><span class="stat-name">' + a + '</span><div class="bar"><div class="bar-i" style="width:' + pct + '%"></div></div><span class="stat-val">' + p.usado + '/' + p.limite + '</span></div>';
+    });
+    html += '</div>';
     const procesos = proc.procesos || [];
     html += '<div class="card"><h4>Procesos</h4><div class="grid-3">' +
       '<div class="metric"><div class="metric-val">' + procesos.filter(p => p.estado === 'procesando').length + '</div><div class="metric-lbl">Activos</div></div>' +
       '<div class="metric"><div class="metric-val ok">' + procesos.filter(p => p.estado === 'completado').length + '</div><div class="metric-lbl">Completados</div></div>' +
       '<div class="metric"><div class="metric-val err">' + procesos.filter(p => p.estado === 'error').length + '</div><div class="metric-lbl">Errores</div></div>' +
       '</div></div>';
-
+    const pubs = pub.publicaciones || [];
+    html += '<div class="card"><h4>Publicaciones</h4><div class="grid-2">' +
+      '<div class="metric"><div class="metric-val ok">' + pubs.filter(p => p.estado === 'publicada').length + '</div><div class="metric-lbl">Publicadas</div></div>' +
+      '<div class="metric"><div class="metric-val">' + pubs.filter(p => p.estado === 'pendiente').length + '</div><div class="metric-lbl">Pendientes</div></div>' +
+      '</div></div>';
     const ctxs = ctx.contextos || [];
     html += '<div class="card"><h4>Contexto</h4><div class="metric"><div class="metric-val">' + ctxs.length + '</div><div class="metric-lbl">Resúmenes guardados</div></div></div>';
-
     cont.innerHTML = html;
-  } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
+  } catch (e) {
+    cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
 }
 
 // ============================================================
-// SANDBOX con currículum unificado
+// SANDBOX
 // ============================================================
 async function cargarSandbox() {
   const contM = document.getElementById('sandbox-metricas');
@@ -498,96 +518,64 @@ async function cargarSandbox() {
     const completados = esc.filter(e => e.completado).length;
     const pendientes = total - completados;
     const estado = d.estado_economico || {};
-    const cap = d.capacidad_real_cloudflare;
-    const cur = d.curriculum || {};
+    const ap = d.aprendizaje || { dominados: [] };
+    const lim = d.limites_cloudflare || {};
+    const curr = d.curriculum || d.curriculum_actual || null;
 
     let html = '<div class="metric-grid">' +
-      '<div class="metric-card"><div class="lbl">Shadow-Tokens</div><div class="val ' + (estado.st > 5 ? 'ok' : estado.st > 0 ? 'warn' : '') + '">' + (estado.st || 0).toFixed(2) + '</div><div class="sub">Simulan USDT</div></div>' +
+      '<div class="metric-card"><div class="lbl">Shadow-Tokens</div><div class="val ' + (estado.st > 5 ? 'ok' : estado.st > 0 ? 'warn' : '') + '">' + (estado.st || 0).toFixed(2) + '</div></div>' +
       '<div class="metric-card"><div class="lbl">Usuarios simulados</div><div class="val">' + (estado.usuarios || 0) + '</div></div>' +
       '<div class="metric-card"><div class="lbl">Escenarios</div><div class="val">' + total + '</div><div class="sub">' + completados + ' resueltos · ' + pendientes + ' pendientes</div></div>' +
-      '<div class="metric-card"><div class="lbl">Progreso currículum</div><div class="val ok">' + (cur.progreso_pct || 0) + '%</div><div class="sub">' + (cur.completadas?.length || 0) + ' / ' + (cur.total_etapas || 33) + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">Temas dominados</div><div class="val ok">' + (ap.dominados || []).length + '</div></div>' +
       '</div>';
 
-    // Barra de progreso del currículum
-    if (cur.total_etapas) {
-      html += '<div class="card"><h4>Progreso del currículum</h4>' +
-        '<div class="barra-progreso"><div class="fill" style="width:' + (cur.progreso_pct || 0) + '%"></div></div>' +
-        '<div class="v" style="margin-top:6px;text-align:center;font-size:12.5px">' + (cur.completadas?.length || 0) + ' de ' + cur.total_etapas + ' etapas completadas</div>' +
-        (cur.etapa_actual ? '<div class="v" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);font-size:13px"><strong>Etapa actual:</strong> ' + cur.etapa_actual.id + ' (fase ' + cur.etapa_actual.fase + ', prioridad ' + cur.etapa_actual.prioridad + '/10, día ' + cur.etapa_actual.dia + '/' + cur.etapa_actual.dias_total + ')<div style="color:var(--fg2);font-size:12px;margin-top:4px">' + cur.etapa_actual.descripcion + '</div><div style="color:var(--acc-hi);font-size:12px;margin-top:6px">Métrica: ' + cur.etapa_actual.metrica + ' ≥ ' + cur.etapa_actual.umbral + '</div></div>' : '') +
+    if (curr) {
+      const pct = curr.total_etapas ? Math.round((curr.completadas || 0) / curr.total_etapas * 100) : 0;
+      html += '<div class="card"><h4>Currículum de Shadow Arise</h4>' +
+        '<div class="bar"><div class="bar-i" style="width:' + pct + '%"></div></div>' +
+        '<div class="v" style="margin-top:8px">' + (curr.completadas || 0) + ' / ' + (curr.total_etapas || 0) + ' etapas · ' + pct + '%</div>' +
+        (curr.actual ? '<div class="v" style="color:var(--acc-hi);margin-top:8px">Ejecutando: <strong>' + curr.actual + '</strong></div>' : '') +
+        (curr.fase_actual ? '<div class="v" style="color:var(--fg3);margin-top:4px">Fase actual: ' + curr.fase_actual + '</div>' : '') +
         '</div>';
     }
 
-    // Capacidad real
-    if (cap) {
-      html += '<div class="card"><h4>Capacidad real Cloudflare</h4><div class="cf-grid">';
-      const items = [
-        { key: 'workers_requests', nombre: 'Workers requests' },
-        { key: 'd1_reads', nombre: 'D1 reads' },
-        { key: 'd1_writes', nombre: 'D1 writes' },
-        { key: 'kv_reads', nombre: 'KV reads' },
-        { key: 'kv_writes', nombre: 'KV writes' }
-      ];
-      items.forEach(it => {
-        const dd = cap[it.key];
-        if (!dd) return;
-        const pct = dd.pct != null ? dd.pct : 0;
-        const cls = pct > 80 ? 'err' : pct > 50 ? 'warn' : 'ok';
-        html += '<div class="cf-row">' +
-          '<span class="cf-nombre">' + it.nombre + '</span>' +
-          '<div class="cf-barra"><div class="cf-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
-          '<span class="cf-val">' + (dd.usado || 0).toLocaleString() + ' · ' + pct + '%</span>' +
-          '</div>';
+    const limKeys = Object.keys(lim);
+    if (limKeys.length) {
+      html += '<div class="card"><h4>Límites Cloudflare (plan gratuito)</h4>';
+      limKeys.forEach(k => {
+        const info = lim[k];
+        const cls = info.pct > 80 ? 'err' : info.pct > 50 ? 'warn' : 'ok';
+        html += '<div class="stat-row"><span class="stat-name">' + k.replace(/_/g, ' ') + '</span><div class="bar"><div class="bar-i" style="width:' + info.pct + '%;background:var(--' + cls + ')"></div></div><span class="stat-val">' + info.pct + '%</span></div>';
       });
-      html += '</div></div>';
+      html += '</div>';
+    }
+
+    if (d.construccion_completada) {
+      html += '<div class="card"><h4>Shadow Arise construido</h4><div class="v" style="color:var(--ok)">✓ Ayanokōji documentó el blueprint completo.</div>';
+      if (d.plan_shadow_arise) {
+        html += '<div class="v" style="margin-top:10px;white-space:pre-wrap;font-size:12.5px;max-height:300px;overflow-y:auto;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">' + d.plan_shadow_arise.substring(0, 1500) + '...</div>';
+      }
+      html += '</div>';
     }
 
     contM.innerHTML = html;
 
-    // Lista de etapas del currículum
-    if (cur.todas_las_etapas && cur.todas_las_etapas.length) {
-      const fases = {};
-      cur.todas_las_etapas.forEach(et => {
-        if (!fases[et.fase]) fases[et.fase] = [];
-        fases[et.fase].push(et);
-      });
-
-      const FASES_NOMBRE = { 0: 'Autoconocimiento', 1: 'Economía', 2: 'Operación', 3: 'Crisis', 4: 'Crecimiento', 5: 'Estratégico', 6: 'Pruebas grandes' };
-
-      let etapasHtml = '';
-      for (const [fase, lista] of Object.entries(fases).sort((a, b) => a[0] - b[0])) {
-        etapasHtml += '<div class="card"><h4>Fase ' + fase + ' · ' + (FASES_NOMBRE[fase] || '') + '</h4>';
-        lista.forEach(et => {
-          const cls = et.completada ? 'ok' : (cur.etapa_actual && cur.etapa_actual.id === et.id) ? 'warn' : '';
-          const icono = et.completada ? '✓' : (cur.etapa_actual && cur.etapa_actual.id === et.id) ? '▶' : '○';
-          etapasHtml += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">' +
-            '<span style="color:' + (cls === 'ok' ? 'var(--ok)' : cls === 'warn' ? 'var(--warn)' : 'var(--fg3)') + ';font-size:14px;min-width:20px">' + icono + '</span>' +
-            '<div style="flex:1;min-width:0">' +
-              '<div style="font-size:13px;color:var(--fg)">' + et.id + '</div>' +
-              '<div style="font-size:11px;color:var(--fg3);margin-top:2px">P' + et.prioridad + ' · ' + et.dias + 'd · ' + et.metrica + (et.metrica_actual != null ? ' = ' + et.metrica_actual : '') + '</div>' +
-            '</div>' +
-          '</div>';
-        });
-        etapasHtml += '</div>';
-      }
-      contM.innerHTML += '<div style="margin-top:20px"><h3 style="font-size:16px;font-weight:500;margin-bottom:12px;color:var(--fg2)">Currículum completo (' + cur.total_etapas + ' etapas)</h3>' + etapasHtml + '</div>';
-    }
-
-    // Escenarios recientes
     if (!esc.length) {
       cont.innerHTML = '<div class="empty">Sin escenarios aún. El cron los genera automáticamente.</div>';
       return;
     }
 
-    const TIPOS = { limite_cf_real:'Límite CF' };
-    cont.innerHTML = '<h3 style="font-size:16px;font-weight:500;margin-bottom:12px;color:var(--fg2)">Escenarios recientes</h3>' + esc.slice(0, 10).map(e => {
+    const TIPOS = { proyecto:'Proyecto', economico:'Económico', social:'Social', etico:'Ético', publicacion:'Publicación', tactico:'Táctico', monetizacion:'Monetización', x402:'x402', crisis:'Crisis', retencion:'Retención', escalado:'Escalado', construccion_shadow_arise:'Construcción', limite_cf_real:'Límite CF' };
+
+    cont.innerHTML = esc.map(e => {
       const fecha = new Date(e.creado).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       const estadoTxt = e.completado ? 'Resuelto' : 'Pendiente';
-      const tipo = TIPOS[e.tipo] || (e.tipo.startsWith('etapa_') ? e.tipo.replace('etapa_', '') : e.tipo);
-      return '<div class="item"><div class="k">' + tipo + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
-        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 600) + '</div>' +
+      return '<div class="item"><div class="k">' + (TIPOS[e.tipo] || e.tipo) + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
+        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 800) + '</div>' +
         (e.decision_tomada ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">' +
-          '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + (e.decision_tomada || '').substring(0, 500) + '</div>' +
-          (e.autoevaluacion ? '<div class="k" style="margin-top:8px;color:var(--ok)">Autoevaluación</div><div class="v" style="font-size:12.5px">' + e.autoevaluacion.substring(0, 500) + '</div>' : '') +
+          '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + e.decision_tomada + '</div>' +
+          '<div class="k" style="margin-top:8px;color:var(--warn)">Resultado simulado</div><div class="v" style="font-size:12.5px">' + (e.resultado || '').substring(0, 700) + '</div>' +
+          (e.autoevaluacion ? '<div class="k" style="margin-top:8px;color:var(--ok)">Autoevaluación</div><div class="v" style="font-size:12.5px">' + e.autoevaluacion.substring(0, 700) + '</div>' : '') +
           '</div>' : '') + '</div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
@@ -602,79 +590,24 @@ async function cargarEstrategias() {
   cont.innerHTML = '<div class="empty">cargando...</div>';
   try {
     const d = await api('/api/estrategias');
-    const lista = d.estrategias || [];
-    if (!lista.length) {
-      cont.innerHTML = '<div class="empty">Sin estrategias guardadas. Escribe una arriba y guárdala.</div>';
+    if (!d.estrategias || !d.estrategias.length) {
+      cont.innerHTML = '<div class="empty">Sin estrategias activas.</div>';
       return;
     }
-    cont.innerHTML = lista.map(e => {
-      const fecha = new Date(e.creada || Date.now()).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-      return '<div class="estrategia-card">' +
-        '<span class="tipo">' + (e.tipo || 'general') + '</span>' +
-        '<span class="fecha">' + fecha + '</span>' +
-        '<div class="texto">' + (e.contenido || '') + '</div>' +
-        '<div class="acciones">' +
-          '<button class="primary" data-simular="' + e.id + '">🧪 Simular en sandbox</button>' +
-          '<button data-publicar="' + e.id + '">💬 Enviar al chat</button>' +
-          '<button data-eliminar="' + e.id + '">🗑️ Eliminar</button>' +
+    cont.innerHTML = d.estrategias.map(e => {
+      const fecha = new Date(e.creada || Date.now()).toLocaleDateString('es-ES');
+      return '<div class="item">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">' +
+          '<div style="flex:1">' +
+            '<div class="k">' + (e.tipo || 'general') + ' · prioridad ' + e.prioridad + ' · ' + fecha + '</div>' +
+            '<div class="v" style="font-weight:500;margin-bottom:6px">' + (e.nombre || '') + '</div>' +
+            '<div class="v" style="color:var(--fg2);font-size:12.5px">' + (e.contenido || '') + '</div>' +
+          '</div>' +
+          '<button class="tool" onclick="eliminarEstrategia(' + e.id + ')" style="padding:4px 10px;font-size:11px;flex-shrink:0">Eliminar</button>' +
         '</div>' +
-        '</div>';
+      '</div>';
     }).join('');
-
-    cont.querySelectorAll('button[data-simular]').forEach(b => {
-      b.addEventListener('click', () => simularEstrategia(b.dataset.simular));
-    });
-    cont.querySelectorAll('button[data-publicar]').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.dataset.publicar;
-        const est = lista.find(x => String(x.id) === String(id));
-        if (est) {
-          cambiarVista('chat');
-          msg.value = 'Analiza y simula esta estrategia: ' + est.contenido;
-          msg.dispatchEvent(new Event('input'));
-        }
-      });
-    });
-    cont.querySelectorAll('button[data-eliminar]').forEach(b => {
-      b.addEventListener('click', () => eliminarEstrategia(b.dataset.eliminar));
-    });
-  } catch (e) {
-    cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
-  }
-}
-
-async function guardarEstrategia() {
-  const ta = document.getElementById('estrategia-input');
-  const sel = document.getElementById('estrategia-tipo');
-  const texto = ta.value.trim();
-  const tipo = sel.value;
-  if (!texto) return alert('Escribe algo primero.');
-  try {
-    const r = await fetch(WORKER_URL + '/api/estrategias', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: texto.substring(0, 60), tipo, contenido: texto, prioridad: 3 })
-    });
-    const d = await r.json();
-    if (d.error) return alert('Error: ' + d.error);
-    ta.value = '';
-    cargarEstrategias();
-  } catch (e) { alert('Error: ' + e.message); }
-}
-
-async function simularEstrategia(id) {
-  if (!confirm('¿Enviar esta estrategia al sandbox para que Ayanokōji la simule?')) return;
-  try {
-    const r = await fetch(WORKER_URL + '/api/sandbox/simular_estrategia', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estrategia_id: id })
-    });
-    const d = await r.json();
-    if (d.error) return alert('Error: ' + d.error);
-    alert('Estrategia enviada al sandbox. En 30-60 segundos Ayanokōji la habrá simulado. Revisa la pestaña Sandbox.');
-    cambiarVista('sandbox');
-  } catch (e) { alert('Error: ' + e.message); }
+  } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
 async function eliminarEstrategia(id) {
@@ -684,8 +617,23 @@ async function eliminarEstrategia(id) {
     cargarEstrategias();
   } catch (e) { alert('Error: ' + e.message); }
 }
+window.eliminarEstrategia = eliminarEstrategia;
 
-document.getElementById('estrategia-save')?.addEventListener('click', guardarEstrategia);
+document.getElementById('estr-save')?.addEventListener('click', async () => {
+  const nombre = document.getElementById('estr-nombre').value.trim();
+  const tipo = document.getElementById('estr-tipo').value;
+  const contenido = document.getElementById('estr-contenido').value.trim();
+  if (!nombre || !contenido) return;
+  try {
+    await api('/api/estrategias', {
+      method: 'POST',
+      body: JSON.stringify({ nombre, tipo, contenido, prioridad: 5 })
+    });
+    document.getElementById('estr-nombre').value = '';
+    document.getElementById('estr-contenido').value = '';
+    cargarEstrategias();
+  } catch (e) { alert('Error: ' + e.message); }
+});
 
 // ============================================================
 // SHADOW
@@ -757,6 +705,86 @@ async function cargarDecisiones() {
 }
 
 // ============================================================
+// ACTIVIDAD EN VIVO
+// ============================================================
+let actividadTimer = null;
+
+function renderActividadLive(d) {
+  let liveHtml = '<div class="metric-grid">' +
+    '<div class="metric-card"><div class="lbl">Estado</div><div class="val ' + (d.estado === 'operando' ? 'ok' : 'warn') + '">' + (d.estado || '—') + '</div></div>' +
+    '<div class="metric-card"><div class="lbl">Etapa actual</div><div class="val">' + (d.etapa_actual?.id || '—') + '</div></div>' +
+    '<div class="metric-card"><div class="lbl">Última acción</div><div class="val">' + (d.ultima_accion || '—') + '</div></div>' +
+    '<div class="metric-card"><div class="lbl">Último cron</div><div class="val">' + (d.ultimo_cron_hace || '—') + '</div></div>' +
+  '</div>';
+  if (d.etapa_actual) {
+    liveHtml += '<div class="card"><h4>Ejecutando ahora</h4>' +
+      '<div class="v"><strong>' + (d.etapa_actual.id || '') + '</strong>' +
+        (d.etapa_actual.fase != null ? ' · fase ' + d.etapa_actual.fase : '') +
+        (d.etapa_actual.prioridad != null ? ' · prioridad ' + d.etapa_actual.prioridad + '/10' : '') +
+        (d.etapa_actual.dia != null ? ' · día ' + d.etapa_actual.dia + '/' + (d.etapa_actual.dias || '?') : '') +
+      '</div>' +
+      (d.etapa_actual.descripcion ? '<div class="v" style="color:var(--fg2);font-size:12.5px;margin-top:6px">' + d.etapa_actual.descripcion + '</div>' : '') +
+      (d.etapa_actual.metrica ? '<div class="v" style="color:var(--acc-hi);font-size:12px;margin-top:8px">Métrica: ' + d.etapa_actual.metrica + ' ≥ ' + (d.etapa_actual.umbral || '?') + '</div>' : '') +
+      '</div>';
+  }
+  return liveHtml;
+}
+
+function renderActividadAcciones(acciones) {
+  if (!acciones || !acciones.length) return '<div class="empty">Sin actividad registrada aún. El cron empezará a generar en breve.</div>';
+  return '<h3 style="font-size:16px;font-weight:500;margin:20px 0 12px;color:var(--fg2)">Últimas acciones</h3>' +
+    acciones.map(a => {
+      const fecha = new Date(a.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const exito = a.exito ? 'ok' : 'err';
+      return '<div class="item" style="padding:10px 14px">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center">' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:12.5px;color:var(--acc-hi);font-weight:600">' + (a.tipo || '—') + '</div>' +
+            '<div style="font-size:12.5px;color:var(--fg2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (a.descripcion || '') + '</div>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--' + exito + ');white-space:nowrap">' + fecha + '</div>' +
+        '</div>' +
+        (a.detalle ? '<div style="font-size:12px;color:var(--fg3);margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);word-break:break-word">' + a.detalle.substring(0, 300) + '</div>' : '') +
+      '</div>';
+    }).join('');
+}
+
+async function cargarActividad() {
+  const live = document.getElementById('actividad-live');
+  const cont = document.getElementById('actividad-content');
+  if (!live || !cont) return;
+  live.innerHTML = '<div class="empty">cargando...</div>';
+  cont.innerHTML = '';
+
+  try {
+    const d = await api('/api/actividad');
+    if (d.error) { live.innerHTML = '<div class="empty">' + d.error + '</div>'; return; }
+    live.innerHTML = renderActividadLive(d);
+    cont.innerHTML = renderActividadAcciones(d.acciones);
+  } catch (e) {
+    live.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+    return;
+  }
+
+  if (actividadTimer) clearInterval(actividadTimer);
+  actividadTimer = setInterval(async () => {
+    if (currentView !== 'actividad') {
+      clearInterval(actividadTimer);
+      actividadTimer = null;
+      return;
+    }
+    try {
+      const d = await api('/api/actividad');
+      const live2 = document.getElementById('actividad-live');
+      const cont2 = document.getElementById('actividad-content');
+      if (!live2 || !cont2) return;
+      live2.innerHTML = renderActividadLive(d);
+      cont2.innerHTML = renderActividadAcciones(d.acciones);
+    } catch (e) {}
+  }, 15000);
+}
+
+// ============================================================
 // IDEAS
 // ============================================================
 async function cargarIdeas() {
@@ -813,7 +841,7 @@ async function cargarNotificaciones() {
       const nueva = n.leida ? '' : ' style="border-left:2px solid var(--acc)"';
       return '<div class="item"' + nueva + '><div class="k">' + (n.tipo || 'general') + ' · ' + fecha + '</div>' +
         '<div class="v" style="font-weight:500;margin-bottom:4px">' + (n.titulo || '') + '</div>' +
-        '<div class="v" style="color:var(--fg2);font-size:12.5px;white-space:pre-wrap">' + (n.mensaje || '') + '</div></div>';
+        '<div class="v" style="color:var(--fg2);font-size:12.5px">' + (n.mensaje || '') + '</div></div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
