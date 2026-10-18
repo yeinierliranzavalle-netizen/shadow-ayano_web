@@ -42,9 +42,6 @@ async function registrarConciencia(accion, detalle, pestana) {
   } catch (e) {}
 }
 
-// ============================================================
-// NAVEGACIÓN
-// ============================================================
 function cambiarVista(v) {
   if (v === currentView) return;
   if (currentView === 'chat' && log) scrollChatGuardado = log.scrollTop;
@@ -73,9 +70,6 @@ function cambiarVista(v) {
 tabs.forEach(t => t.addEventListener('click', () => cambiarVista(t.dataset.view)));
 backToChat.addEventListener('click', () => cambiarVista('chat'));
 
-// ============================================================
-// UTILIDADES
-// ============================================================
 function addCopyButton(pre) {
   if (pre.querySelector('.copy-btn')) return;
   const btn = document.createElement('button');
@@ -207,6 +201,10 @@ async function enviar() {
       metaInfo.textContent = '· ' + d.intencion;
       setTimeout(() => metaInfo.textContent = '', 3000);
     }
+    // Si activó un modo, refrescar indicadores
+    if (d.modo_arquitecto_activo || d.modo_intensivo_activo || d.modo_activo) {
+      checkModos();
+    }
   } catch (e) {
     t.remove();
     add('Error de conexión: ' + e.message, 'e');
@@ -255,9 +253,6 @@ async function cargarHistorialLargo() {
   } catch (e) {}
 }
 
-// ============================================================
-// BOTONES
-// ============================================================
 document.getElementById('btnFile').addEventListener('click', () => fileIn.click());
 
 document.getElementById('btnImagen')?.addEventListener('click', async () => {
@@ -348,9 +343,6 @@ fileIn.addEventListener('change', async () => {
   fileIn.value = '';
 });
 
-// ============================================================
-// PANEL
-// ============================================================
 function abrirPanel(titulo) { panelT.textContent = titulo; panel.classList.add('on'); }
 function cerrarPanel() {
   panel.classList.remove('on');
@@ -410,9 +402,6 @@ document.getElementById('btnReset').addEventListener('click', async () => {
   } catch (e) { add('Error: ' + e.message, 'e'); }
 });
 
-// ============================================================
-// STATS con capacidad REAL
-// ============================================================
 async function cargarStats() {
   const contUso = document.getElementById('uso-real-content');
   const cont = document.getElementById('stats-content');
@@ -421,7 +410,6 @@ async function cargarStats() {
   contUso.innerHTML = '<div class="empty">cargando uso real...</div>';
   cont.innerHTML = '<div class="empty">cargando...</div>';
 
-  // === Uso real de Cloudflare ===
   try {
     const d = await api('/api/capacidades');
     if (d.error || !d.ok) {
@@ -449,9 +437,6 @@ async function cargarStats() {
       if (lim.workers_errores) {
         html += '<div class="stat-row"><span class="stat-name">Workers errores</span><span class="stat-val" style="color:var(--err)">' + (lim.workers_errores.usado || 0) + '</span></div>';
       }
-      if (lim.workers_subrequests) {
-        html += '<div class="stat-row"><span class="stat-name">Subrequests</span><span class="stat-val">' + (lim.workers_subrequests.usado || 0).toLocaleString() + '</span></div>';
-      }
       html += '</div>';
 
       html += '<div class="card"><h4>Estado del sistema</h4>' +
@@ -467,7 +452,6 @@ async function cargarStats() {
     contUso.innerHTML = '<div class="card"><h4>Uso Cloudflare</h4><div class="empty">Error: ' + e.message + '</div></div>';
   }
 
-  // === Stats locales ===
   try {
     const [pres, proc, pub, ctx] = await Promise.all([
       api('/api/presupuesto').catch(() => ({})),
@@ -501,9 +485,6 @@ async function cargarStats() {
   }
 }
 
-// ============================================================
-// SANDBOX
-// ============================================================
 async function cargarSandbox() {
   const contM = document.getElementById('sandbox-metricas');
   const cont = document.getElementById('sandbox-content');
@@ -535,27 +516,7 @@ async function cargarSandbox() {
         '<div class="bar"><div class="bar-i" style="width:' + pct + '%"></div></div>' +
         '<div class="v" style="margin-top:8px">' + (curr.completadas || 0) + ' / ' + (curr.total_etapas || 0) + ' etapas · ' + pct + '%</div>' +
         (curr.actual ? '<div class="v" style="color:var(--acc-hi);margin-top:8px">Ejecutando: <strong>' + curr.actual + '</strong></div>' : '') +
-        (curr.fase_actual ? '<div class="v" style="color:var(--fg3);margin-top:4px">Fase actual: ' + curr.fase_actual + '</div>' : '') +
         '</div>';
-    }
-
-    const limKeys = Object.keys(lim);
-    if (limKeys.length) {
-      html += '<div class="card"><h4>Límites Cloudflare (plan gratuito)</h4>';
-      limKeys.forEach(k => {
-        const info = lim[k];
-        const cls = info.pct > 80 ? 'err' : info.pct > 50 ? 'warn' : 'ok';
-        html += '<div class="stat-row"><span class="stat-name">' + k.replace(/_/g, ' ') + '</span><div class="bar"><div class="bar-i" style="width:' + info.pct + '%;background:var(--' + cls + ')"></div></div><span class="stat-val">' + info.pct + '%</span></div>';
-      });
-      html += '</div>';
-    }
-
-    if (d.construccion_completada) {
-      html += '<div class="card"><h4>Shadow Arise construido</h4><div class="v" style="color:var(--ok)">✓ Ayanokōji documentó el blueprint completo.</div>';
-      if (d.plan_shadow_arise) {
-        html += '<div class="v" style="margin-top:10px;white-space:pre-wrap;font-size:12.5px;max-height:300px;overflow-y:auto;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">' + d.plan_shadow_arise.substring(0, 1500) + '...</div>';
-      }
-      html += '</div>';
     }
 
     contM.innerHTML = html;
@@ -565,25 +526,15 @@ async function cargarSandbox() {
       return;
     }
 
-    const TIPOS = { proyecto:'Proyecto', economico:'Económico', social:'Social', etico:'Ético', publicacion:'Publicación', tactico:'Táctico', monetizacion:'Monetización', x402:'x402', crisis:'Crisis', retencion:'Retención', escalado:'Escalado', construccion_shadow_arise:'Construcción', limite_cf_real:'Límite CF' };
-
     cont.innerHTML = esc.map(e => {
       const fecha = new Date(e.creado).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       const estadoTxt = e.completado ? 'Resuelto' : 'Pendiente';
-      return '<div class="item"><div class="k">' + (TIPOS[e.tipo] || e.tipo) + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
-        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 800) + '</div>' +
-        (e.decision_tomada ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">' +
-          '<div class="k" style="color:var(--acc-hi)">Decisión tomada</div><div class="v">' + e.decision_tomada + '</div>' +
-          '<div class="k" style="margin-top:8px;color:var(--warn)">Resultado simulado</div><div class="v" style="font-size:12.5px">' + (e.resultado || '').substring(0, 700) + '</div>' +
-          (e.autoevaluacion ? '<div class="k" style="margin-top:8px;color:var(--ok)">Autoevaluación</div><div class="v" style="font-size:12.5px">' + e.autoevaluacion.substring(0, 700) + '</div>' : '') +
-          '</div>' : '') + '</div>';
+      return '<div class="item"><div class="k">' + (e.tipo || '—') + ' · ' + fecha + ' · ' + estadoTxt + '</div>' +
+        '<div class="v" style="white-space:pre-wrap;font-size:12.5px">' + (e.contexto || '').substring(0, 800) + '</div>' + '</div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============================================================
-// ESTRATEGIAS
-// ============================================================
 async function cargarEstrategias() {
   const cont = document.getElementById('estrategias-content');
   if (!cont) return;
@@ -597,27 +548,13 @@ async function cargarEstrategias() {
     cont.innerHTML = d.estrategias.map(e => {
       const fecha = new Date(e.creada || Date.now()).toLocaleDateString('es-ES');
       return '<div class="item">' +
-        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">' +
-          '<div style="flex:1">' +
-            '<div class="k">' + (e.tipo || 'general') + ' · prioridad ' + e.prioridad + ' · ' + fecha + '</div>' +
-            '<div class="v" style="font-weight:500;margin-bottom:6px">' + (e.nombre || '') + '</div>' +
-            '<div class="v" style="color:var(--fg2);font-size:12.5px">' + (e.contenido || '') + '</div>' +
-          '</div>' +
-          '<button class="tool" onclick="eliminarEstrategia(' + e.id + ')" style="padding:4px 10px;font-size:11px;flex-shrink:0">Eliminar</button>' +
-        '</div>' +
-      '</div>';
+        '<div class="k">' + (e.tipo || 'general') + ' · prioridad ' + e.prioridad + ' · ' + fecha + '</div>' +
+        '<div class="v" style="font-weight:500;margin-bottom:6px">' + (e.nombre || '') + '</div>' +
+        '<div class="v" style="color:var(--fg2);font-size:12.5px">' + (e.contenido || '') + '</div>' +
+        '</div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
-
-async function eliminarEstrategia(id) {
-  if (!confirm('¿Eliminar esta estrategia?')) return;
-  try {
-    await fetch(WORKER_URL + '/api/estrategias/' + id, { method: 'DELETE' });
-    cargarEstrategias();
-  } catch (e) { alert('Error: ' + e.message); }
-}
-window.eliminarEstrategia = eliminarEstrategia;
 
 document.getElementById('estr-save')?.addEventListener('click', async () => {
   const nombre = document.getElementById('estr-nombre').value.trim();
@@ -635,9 +572,6 @@ document.getElementById('estr-save')?.addEventListener('click', async () => {
   } catch (e) { alert('Error: ' + e.message); }
 });
 
-// ============================================================
-// SHADOW
-// ============================================================
 async function cargarShadow() {
   const cont = document.getElementById('shadow-content');
   if (!cont) return;
@@ -677,9 +611,6 @@ async function cargarShadow() {
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============================================================
-// DECISIONES
-// ============================================================
 async function cargarDecisiones() {
   const cont = document.getElementById('decisiones-content');
   if (!cont) return;
@@ -697,16 +628,12 @@ async function cargarDecisiones() {
         '<span class="tipo">' + (dd.tipo || 'general') + '</span>' +
         '<span class="fecha">' + fecha + '</span>' +
         '<div class="decision-text"><strong>Decisión:</strong> ' + (dd.decision || '') + '</div>' +
-        (dd.simulacion ? '<div class="simulacion"><strong>Simulación:</strong> ' + dd.simulacion.substring(0, 300) + '</div>' : '') +
         (dd.resultado ? '<div class="resultado ' + exito + '"><strong>Resultado:</strong> ' + dd.resultado.substring(0, 300) + '</div>' : '') +
         '</div>';
     }).join('');
   } catch (e) { cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; }
 }
 
-// ============================================================
-// ACTIVIDAD EN VIVO
-// ============================================================
 let actividadTimer = null;
 
 function renderActividadLive(d) {
@@ -716,22 +643,11 @@ function renderActividadLive(d) {
     '<div class="metric-card"><div class="lbl">Última acción</div><div class="val">' + (d.ultima_accion || '—') + '</div></div>' +
     '<div class="metric-card"><div class="lbl">Último cron</div><div class="val">' + (d.ultimo_cron_hace || '—') + '</div></div>' +
   '</div>';
-  if (d.etapa_actual) {
-    liveHtml += '<div class="card"><h4>Ejecutando ahora</h4>' +
-      '<div class="v"><strong>' + (d.etapa_actual.id || '') + '</strong>' +
-        (d.etapa_actual.fase != null ? ' · fase ' + d.etapa_actual.fase : '') +
-        (d.etapa_actual.prioridad != null ? ' · prioridad ' + d.etapa_actual.prioridad + '/10' : '') +
-        (d.etapa_actual.dia != null ? ' · día ' + d.etapa_actual.dia + '/' + (d.etapa_actual.dias || '?') : '') +
-      '</div>' +
-      (d.etapa_actual.descripcion ? '<div class="v" style="color:var(--fg2);font-size:12.5px;margin-top:6px">' + d.etapa_actual.descripcion + '</div>' : '') +
-      (d.etapa_actual.metrica ? '<div class="v" style="color:var(--acc-hi);font-size:12px;margin-top:8px">Métrica: ' + d.etapa_actual.metrica + ' ≥ ' + (d.etapa_actual.umbral || '?') + '</div>' : '') +
-      '</div>';
-  }
   return liveHtml;
 }
 
 function renderActividadAcciones(acciones) {
-  if (!acciones || !acciones.length) return '<div class="empty">Sin actividad registrada aún. El cron empezará a generar en breve.</div>';
+  if (!acciones || !acciones.length) return '<div class="empty">Sin actividad registrada aún.</div>';
   return '<h3 style="font-size:16px;font-weight:500;margin:20px 0 12px;color:var(--fg2)">Últimas acciones</h3>' +
     acciones.map(a => {
       const fecha = new Date(a.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -784,9 +700,6 @@ async function cargarActividad() {
   }, 15000);
 }
 
-// ============================================================
-// IDEAS
-// ============================================================
 async function cargarIdeas() {
   const cont = document.getElementById('ideas-content');
   if (!cont) return;
@@ -825,9 +738,6 @@ document.getElementById('idea-save')?.addEventListener('click', async () => {
   } catch (e) { alert('Error: ' + e.message); }
 });
 
-// ============================================================
-// BANDEJA
-// ============================================================
 async function cargarNotificaciones() {
   const cont = document.getElementById('notif-content');
   if (!cont) return;
@@ -859,6 +769,37 @@ document.getElementById('marcar-leidas')?.addEventListener('click', async () => 
 });
 
 // ============================================================
+// MODOS (arquitecto, intensivo, ausente)
+// ============================================================
+async function checkModos() {
+  const modos = ['arquitecto', 'intensivo', 'ausente'];
+  const elMap = {
+    arquitecto: 'modo-arquitecto',
+    intensivo: 'modo-intensivo',
+    ausente: 'modo-ausente'
+  };
+  for (const modo of modos) {
+    const el = document.getElementById(elMap[modo]);
+    if (!el) continue;
+    try {
+      const r = await fetch(WORKER_URL + '/api/kv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'leer', clave: 'modo_' + modo })
+      });
+      const d = await r.json();
+      const activo = d.valor === 'true';
+      el.classList.toggle('active', activo);
+      if (activo) {
+        el.title = 'Modo ' + modo + ' ACTIVO';
+      } else {
+        el.title = 'Modo ' + modo + ' inactivo';
+      }
+    } catch (e) {}
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 checkEstado();
@@ -866,6 +807,9 @@ setInterval(checkEstado, 30000);
 msg.focus();
 
 cargarHistorialLargo();
+
+setTimeout(checkModos, 1000);
+setInterval(checkModos, 30000);
 
 setInterval(async () => {
   try {
