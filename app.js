@@ -61,6 +61,7 @@ function cambiarVista(v) {
   if (v === 'bandeja') cargarNotificaciones();
   if (v === 'decisiones') cargarDecisiones();
   if (v === 'shadow') cargarShadow();
+  if (v === 'calibracion') cargarCalibracion();
 
   if (v === 'chat') {
     setTimeout(() => { if (log) log.scrollTop = scrollChatGuardado; }, 20);
@@ -201,7 +202,6 @@ async function enviar() {
       metaInfo.textContent = '· ' + d.intencion;
       setTimeout(() => metaInfo.textContent = '', 3000);
     }
-    // Si activó un modo, refrescar indicadores
     if (d.modo_arquitecto_activo || d.modo_intensivo_activo || d.modo_activo) {
       checkModos();
     }
@@ -768,16 +768,147 @@ document.getElementById('marcar-leidas')?.addEventListener('click', async () => 
   cargarNotificaciones();
 });
 
-// ============================================================
-// MODOS (arquitecto, intensivo, ausente)
-// ============================================================
+async function cargarCalibracion() {
+  await cargarConfianza();
+  await cargarExamenPendiente();
+  await cargarHistorialExamenes();
+}
+
+async function cargarConfianza() {
+  const cont = document.getElementById('confianza-panel');
+  if (!cont) return;
+  cont.innerHTML = '<div class="empty">cargando...</div>';
+  try {
+    const [conf, hist] = await Promise.all([
+      api('/api/confianza'),
+      api('/api/confianza/historial').catch(() => ({ historial: [] }))
+    ]);
+    if (conf.error) { cont.innerHTML = '<div class="empty">' + conf.error + '</div>'; return; }
+
+    const actual = conf.actual || 0;
+    const sig = conf.siguiente_desbloqueo;
+    const pct = actual;
+
+    let html = '<div class="metric-grid">' +
+      '<div class="metric-card"><div class="lbl">Confianza</div><div class="val ' + (actual >= 50 ? 'ok' : actual >= 30 ? 'warn' : '') + '">' + actual + ' / 100</div>' +
+      '<div class="bar" style="margin-top:8px"><div class="bar-i" style="width:' + pct + '%"></div></div>' +
+      (sig ? '<div class="sub">Próximo desbloqueo a ' + sig.nivel + ' (faltan ' + conf.faltan + ')</div>' : '<div class="sub">Máximo alcanzado</div>') +
+      '</div>' +
+      '</div>';
+
+    if (sig) {
+      html += '<div class="card"><h4>Próximo desbloqueo</h4><div class="v">' + sig.descripcion + '</div></div>';
+    }
+
+    if (hist.historial && hist.historial.length) {
+      html += '<div class="card"><h4>Historial reciente</h4>';
+      hist.historial.slice(0, 10).forEach(h => {
+        const fecha = new Date(h.fecha).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const color = h.tipo === 'suma' ? 'var(--ok)' : 'var(--err)';
+        const signo = h.tipo === 'suma' ? '+' : '-';
+        html += '<div class="stat-row"><span class="stat-name" style="color:' + color + '">' + signo + h.puntos + '</span><span class="stat-val">' + fecha + '</span></div>';
+      });
+      html += '</div>';
+    }
+
+    cont.innerHTML = html;
+  } catch (e) {
+    cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
+}
+
+async function cargarExamenPendiente() {
+  const cont = document.getElementById('examen-pendiente');
+  if (!cont) return;
+  cont.innerHTML = '<div class="empty">cargando...</div>';
+  try {
+    const d = await api('/api/examen/pendiente');
+    if (d.pendiente) {
+      const p = d.pendiente;
+      let html = '<div class="card" style="border-color:var(--acc-hi)"><h4>Pregunta pendiente</h4>' +
+        '<div class="v" style="font-size:15px;margin-bottom:14px">' + p.pregunta + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="respuesta-btn" data-id="' + p.id + '" data-resp="A">A) ' + p.opcion_a + '</button>' +
+        '<button class="respuesta-btn" data-id="' + p.id + '" data-resp="B">B) ' + p.opcion_b + '</button>';
+      if (p.opcion_c) {
+        html += '<button class="respuesta-btn" data-id="' + p.id + '" data-resp="C">C) ' + p.opcion_c + '</button>';
+      }
+      html += '</div></div>';
+      cont.innerHTML = html;
+
+      cont.querySelectorAll('.respuesta-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const resp = btn.dataset.resp;
+          btn.disabled = true;
+          try {
+            const r = await api('/api/examen/responder', { method: 'POST', body: JSON.stringify({ id: parseInt(id), respuesta: resp }) });
+            if (r.error) { alert(r.error); btn.disabled = false; return; }
+            const acerto = r.acierto ? '✓ ACERTÓ' : '✗ FALLÓ';
+            const color = r.acierto ? 'var(--ok)' : 'var(--err)';
+            cont.innerHTML = '<div class="card"><h4>Resultado</h4>' +
+              '<div class="v" style="color:' + color + ';font-size:16px;font-weight:600">' + acerto + '</div>' +
+              '<div class="v" style="margin-top:8px">Tu respuesta: <strong>' + resp + '</strong> · Predicción de Ayanokōji: <strong>' + r.respuesta_correcta + '</strong></div>' +
+              (r.razon_prediccion ? '<div class="v" style="margin-top:8px;color:var(--fg2)">Por qué predijo eso: ' + r.razon_prediccion + '</div>' : '') +
+              '<div class="v" style="margin-top:8px">Confianza: <strong>' + (r.confianza?.actual || 0) + '/100</strong></div>' +
+              '</div>';
+            setTimeout(() => { cargarCalibracion(); }, 3000);
+          } catch (e) { alert('Error: ' + e.message); btn.disabled = false; }
+        });
+      });
+      return;
+    }
+
+    cont.innerHTML = '<div class="card"><h4>Sin preguntas pendientes</h4>' +
+      '<div class="v" style="margin-bottom:12px">Ayanokōji puede generar una pregunta de criterio para calibrar tu forma de pensar.</div>' +
+      '<button id="generar-examen" style="background:var(--acc);color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px">Generar pregunta</button>' +
+      '</div>';
+    document.getElementById('generar-examen').addEventListener('click', async () => {
+      const btn = document.getElementById('generar-examen');
+      btn.disabled = true; btn.textContent = 'Generando...';
+      try {
+        const r = await api('/api/examen/generar', { method: 'POST' });
+        if (r.error) { alert(r.error); btn.disabled = false; btn.textContent = 'Generar pregunta'; return; }
+        cargarExamenPendiente();
+      } catch (e) { alert('Error: ' + e.message); btn.disabled = false; btn.textContent = 'Generar pregunta'; }
+    });
+  } catch (e) {
+    cont.innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
+}
+
+async function cargarHistorialExamenes() {
+  const cont = document.getElementById('examen-historial');
+  if (!cont) return;
+  try {
+    const d = await api('/api/examen/listar');
+    if (d.error) { cont.innerHTML = ''; return; }
+    let html = '<div class="card"><h4>Estadísticas</h4>' +
+      '<div class="metric-grid">' +
+      '<div class="metric-card"><div class="lbl">Total</div><div class="val">' + (d.estadisticas?.total || 0) + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">Aciertos</div><div class="val ok">' + (d.estadisticas?.aciertos || 0) + '</div></div>' +
+      '<div class="metric-card"><div class="lbl">% Acierto</div><div class="val ' + ((d.estadisticas?.porcentaje || 0) >= 70 ? 'ok' : 'warn') + '">' + (d.estadisticas?.porcentaje || 0) + '%</div></div>' +
+      '</div></div>';
+
+    if (d.historial && d.historial.length) {
+      html += '<div class="card"><h4>Historial</h4>';
+      d.historial.slice(0, 10).forEach(h => {
+        const fecha = new Date(h.respondida_en).toLocaleString('es-ES', { day: '2-digit', month: 'short' });
+        const acierto = h.acierto ? '✓' : '✗';
+        const color = h.acierto ? 'var(--ok)' : 'var(--err)';
+        html += '<div class="item" style="padding:10px 14px"><div class="k">' + fecha + ' <span style="color:' + color + '">' + acierto + '</span></div>' +
+          '<div class="v" style="font-size:12.5px">' + (h.pregunta || '').substring(0, 150) + '</div>' +
+          '<div class="v" style="font-size:11px;color:var(--fg3);margin-top:4px">Predicción: ' + h.prediccion + ' · Comandante: ' + h.respuesta_usuario + '</div></div>';
+      });
+      html += '</div>';
+    }
+    cont.innerHTML = html;
+  } catch (e) { cont.innerHTML = ''; }
+}
+
 async function checkModos() {
   const modos = ['arquitecto', 'intensivo', 'ausente'];
-  const elMap = {
-    arquitecto: 'modo-arquitecto',
-    intensivo: 'modo-intensivo',
-    ausente: 'modo-ausente'
-  };
+  const elMap = { arquitecto: 'modo-arquitecto', intensivo: 'modo-intensivo', ausente: 'modo-ausente' };
   for (const modo of modos) {
     const el = document.getElementById(elMap[modo]);
     if (!el) continue;
@@ -790,34 +921,21 @@ async function checkModos() {
       const d = await r.json();
       const activo = d.valor === 'true';
       el.classList.toggle('active', activo);
-      if (activo) {
-        el.title = 'Modo ' + modo + ' ACTIVO';
-      } else {
-        el.title = 'Modo ' + modo + ' inactivo';
-      }
+      if (activo) el.title = 'Modo ' + modo + ' ACTIVO';
+      else el.title = 'Modo ' + modo + ' inactivo';
     } catch (e) {}
   }
 }
 
-// ============================================================
-// INIT
-// ============================================================
 checkEstado();
 setInterval(checkEstado, 30000);
 msg.focus();
-
 cargarHistorialLargo();
-
 setTimeout(checkModos, 1000);
 setInterval(checkModos, 30000);
-
 setInterval(async () => {
-  try {
-    const d = await api('/api/notificaciones');
-    actualizarBadge(d.no_leidas || 0);
-  } catch (e) {}
+  try { const d = await api('/api/notificaciones'); actualizarBadge(d.no_leidas || 0); } catch (e) {}
 }, 60000);
-
 setInterval(async () => {
   if (currentView !== 'chat') return;
   try {
