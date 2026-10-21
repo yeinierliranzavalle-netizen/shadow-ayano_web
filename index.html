@@ -15,6 +15,7 @@
   </div>
   <nav class="tabs">
     <button class="tab active" data-view="chat">Chat</button>
+    <button class="tab" data-view="calibracion">Calibración</button>
     <button class="tab" data-view="sandbox">Sandbox</button>
     <button class="tab" data-view="estrategias">Estrategias</button>
     <button class="tab" data-view="shadow">Shadow</button>
@@ -29,15 +30,9 @@
     <span id="stat">conectando</span>
   </div>
   <div id="modos-bar" class="modos-bar">
-    <span class="modo-indicator" id="modo-arquitecto" title="Modo Arquitecto">
-      <span class="dot"></span> Arq
-    </span>
-    <span class="modo-indicator" id="modo-intensivo" title="Modo Intensivo">
-      <span class="dot"></span> Int
-    </span>
-    <span class="modo-indicator" id="modo-ausente" title="Modo Ausente">
-      <span class="dot"></span> Aus
-    </span>
+    <span class="modo-indicator" id="modo-arquitecto" title="Modo Arquitecto"><span class="dot"></span> Arq</span>
+    <span class="modo-indicator" id="modo-intensivo" title="Modo Intensivo"><span class="dot"></span> Int</span>
+    <span class="modo-indicator" id="modo-ausente" title="Modo Ausente"><span class="dot"></span> Aus</span>
   </div>
 </header>
 
@@ -58,6 +53,16 @@
     <button class="scroll-btn" id="scrollBtn" aria-label="Bajar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
+  </section>
+
+  <section id="view-calibracion" class="view">
+    <div class="section-head">
+      <h3>Calibración de Criterio</h3>
+      <p class="sub">Aquí Ayanokōji aprende cómo piensas. Predice tu respuesta, tú eliges, y él calibra.</p>
+    </div>
+    <div id="confianza-panel"></div>
+    <div id="examen-pendiente"></div>
+    <div id="examen-historial"></div>
   </section>
 
   <section id="view-sandbox" class="view">
@@ -160,48 +165,19 @@
 
 <footer id="footer">
   <div class="tools">
-    <button class="tool" id="btnFile">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Subir
-    </button>
-    <button class="tool" id="btnImagen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      Imagen
-    </button>
-    <button class="tool" id="btnIndexar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Indexar
-    </button>
-    <button class="tool" id="btnMigrar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
-      Migrar
-    </button>
-    <button class="tool" id="btnDiag">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      Diagnóstico
-    </button>
-    <button class="tool" id="btnProc">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Procesos
-    </button>
-    <button class="tool" id="btnCtx">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6H9z"/><path d="M3 9h6v6H3z"/><path d="M15 9h6v6h-6z"/><path d="M9 15h6v6H9z"/></svg>
-      Contexto
-    </button>
-    <button class="tool" id="btnCorregir">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Corregir voz
-    </button>
-    <button class="tool" id="btnReset">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      Limpiar
-    </button>
+    <button class="tool" id="btnFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir</button>
+    <button class="tool" id="btnImagen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Imagen</button>
+    <button class="tool" id="btnIndexar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Indexar</button>
+    <button class="tool" id="btnMigrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg> Migrar</button>
+    <button class="tool" id="btnDiag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Diagnóstico</button>
+    <button class="tool" id="btnProc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Procesos</button>
+    <button class="tool" id="btnCtx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6H9z"/><path d="M3 9h6v6H3z"/><path d="M15 9h6v6h-6z"/><path d="M9 15h6v6H9z"/></svg> Contexto</button>
+    <button class="tool" id="btnCorregir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Corregir voz</button>
+    <button class="tool" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Limpiar</button>
   </div>
   <div class="composer">
     <textarea id="msg" placeholder="Escribe al Comandante..." rows="1"></textarea>
-    <button class="send" id="send" aria-label="Enviar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-    </button>
+    <button class="send" id="send" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
   </div>
   <div class="meta">
     <span><kbd>Enter</kbd> enviar · <kbd>Shift</kbd>+<kbd>Enter</kbd> nueva línea</span>
@@ -212,10 +188,7 @@
 
 <div class="panel" id="panel">
   <div class="panel-c">
-    <div class="panel-h">
-      <h3 id="panelT">Panel</h3>
-      <button class="close" id="panelX">×</button>
-    </div>
+    <div class="panel-h"><h3 id="panelT">Panel</h3><button class="close" id="panelX">×</button></div>
     <div id="panelB"></div>
   </div>
 </div>
