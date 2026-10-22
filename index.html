@@ -3,196 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Ayanokōji · Aliado Digital</title>
-<link rel="stylesheet" href="styles.css">
+<title>Ayanokōji · Centro de Comando</title>
+<link rel="stylesheet" href="styles.css?v=20.0">
 </head>
-<body data-view="chat">
+<body>
 
-<header>
+<header id="header">
   <div class="brand">
     <div class="logo">A</div>
-    <b>Ayanokōji</b><span>· Digital</span>
+    <div class="brand-text">
+      <b>Ayanokōji</b>
+      <span>· Digital v20</span>
+    </div>
   </div>
-  <nav class="tabs">
-    <button class="tab active" data-view="chat">Chat</button>
-    <button class="tab" data-view="calibracion">Calibración</button>
-    <button class="tab" data-view="sandbox">Sandbox</button>
-    <button class="tab" data-view="estrategias">Estrategias</button>
-    <button class="tab" data-view="shadow">Shadow</button>
-    <button class="tab" data-view="stats">Stats</button>
-    <button class="tab" data-view="actividad">Actividad</button>
-    <button class="tab" data-view="decisiones">Decisiones</button>
-    <button class="tab" data-view="ideas">Ideas</button>
-    <button class="tab" data-view="bandeja">Bandeja <span id="notif-badge" class="badge" style="display:none">0</span></button>
-  </nav>
-  <div class="status">
+
+  <div class="status" id="status-badge">
     <div class="dot" id="dot"></div>
     <span id="stat">conectando</span>
   </div>
-  <div id="modos-bar" class="modos-bar">
-    <span class="modo-indicator" id="modo-arquitecto" title="Modo Arquitecto"><span class="dot"></span> Arq</span>
-    <span class="modo-indicator" id="modo-intensivo" title="Modo Intensivo"><span class="dot"></span> Int</span>
-    <span class="modo-indicator" id="modo-ausente" title="Modo Ausente"><span class="dot"></span> Aus</span>
+
+  <div class="modos-bar" id="modos-bar">
+    <span class="modo-indicator" id="modo-arquitecto" title="Modo Arquitecto">
+      <span class="dot"></span> ARQ
+    </span>
+    <span class="modo-indicator" id="modo-intensivo" title="Modo Intensivo">
+      <span class="dot"></span> INT
+    </span>
+    <span class="modo-indicator" id="modo-ausente" title="Modo Ausente">
+      <span class="dot"></span> AUS
+    </span>
   </div>
+
+  <button class="widgets-toggle" id="widgetsToggle" aria-label="Abrir widgets">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </button>
 </header>
 
-<main>
-  <section id="view-chat" class="view active">
+<main id="main">
+  <section id="chat-area">
     <div id="log" class="log">
       <div class="welcome" id="welcome">
-        <h2>Aliado <b>Digital</b> activo</h2>
-        <p>Escribe una orden, sube un archivo, o pídeme que procese tu contexto.</p>
+        <h1>Ayanokōji <b>Digital</b></h1>
+        <p class="sub">Centro de comando · v20.0</p>
+        <p class="hint">Escribe una orden. Habla con él. O pídele que lea su propio código.</p>
         <div class="chips">
-          <button class="chip" data-t="Cómo estás">📊 Estado</button>
-          <button class="chip" data-t="Muéstrame tu memoria">🧠 Memoria</button>
-          <button class="chip" data-t="Muéstrame las decisiones que has tomado">🧭 Decisiones</button>
-          <button class="chip" data-t="Muéstrame tu contexto guardado">📋 Contexto</button>
+          <button class="chip" data-t="Cómo estás">Estado</button>
+          <button class="chip" data-t="Lee tu worker.js">Leer código</button>
+          <button class="chip" data-t="Muéstrame tu memoria">Memoria</button>
+          <button class="chip" data-t="Activa modo arquitecto">Modo Arq</button>
         </div>
       </div>
     </div>
     <button class="scroll-btn" id="scrollBtn" aria-label="Bajar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
+    <div class="scan-line" id="scanLine"></div>
   </section>
 
-  <section id="view-calibracion" class="view">
-    <div class="section-head">
-      <h3>Calibración de Criterio</h3>
-      <p class="sub">Aquí Ayanokōji aprende cómo piensas. Predice tu respuesta, tú eliges, y él calibra.</p>
+  <aside id="side-panel">
+    <div class="panel-header">
+      <span>SISTEMA</span>
+      <button class="panel-close" id="panelClose">×</button>
     </div>
-    <div id="confianza-panel"></div>
-    <div id="examen-pendiente"></div>
-    <div id="examen-historial"></div>
-  </section>
-
-  <section id="view-sandbox" class="view">
-    <div class="section-head">
-      <h3>Sandbox de Entrenamiento</h3>
-      <p class="sub">Ayanokōji practica decisiones. Tú ves su progreso, sus aciertos y sus áreas débiles.</p>
+    <div class="widgets-grid">
+      <button class="widget" data-view="confianza">
+        <div class="widget-label">CONFIANZA</div>
+        <div class="widget-value" id="w-confianza">—</div>
+        <div class="widget-bar"><div id="w-confianza-bar"></div></div>
+      </button>
+      <button class="widget" data-view="mision">
+        <div class="widget-label">MISIÓN</div>
+        <div class="widget-value small" id="w-mision">—</div>
+      </button>
+      <button class="widget" data-view="pensamiento">
+        <div class="widget-label">PENSAMIENTO</div>
+        <div class="widget-value small" id="w-pensamiento">—</div>
+      </button>
+      <button class="widget" data-view="actividad">
+        <div class="widget-label">ACTIVIDAD</div>
+        <div class="widget-value small" id="w-actividad">—</div>
+      </button>
+      <button class="widget" data-view="bandeja">
+        <div class="widget-label">BANDEJA</div>
+        <div class="widget-value" id="w-bandeja">0</div>
+      </button>
+      <button class="widget" data-view="calibracion">
+        <div class="widget-label">EXAMEN</div>
+        <div class="widget-value small" id="w-examen">—</div>
+      </button>
+      <button class="widget" data-view="sandbox">
+        <div class="widget-label">SANDBOX</div>
+        <div class="widget-value" id="w-sandbox">—</div>
+      </button>
+      <button class="widget" data-view="decisiones">
+        <div class="widget-label">DECISIONES</div>
+        <div class="widget-value" id="w-decisiones">—</div>
+      </button>
+      <button class="widget" data-view="shadow">
+        <div class="widget-label">SHADOW</div>
+        <div class="widget-value" id="w-shadow">—</div>
+      </button>
+      <button class="widget" data-view="stats">
+        <div class="widget-label">SISTEMA</div>
+        <div class="widget-value small" id="w-stats">—</div>
+      </button>
+      <button class="widget" data-view="estrategias">
+        <div class="widget-label">ESTRATEGIAS</div>
+        <div class="widget-value" id="w-estrategias">—</div>
+      </button>
+      <button class="widget" data-view="ideas">
+        <div class="widget-label">IDEAS</div>
+        <div class="widget-value" id="w-ideas">—</div>
+      </button>
     </div>
-    <div id="sandbox-metricas"></div>
-    <div id="sandbox-content"></div>
-  </section>
-
-  <section id="view-estrategias" class="view">
-    <div class="section-head">
-      <h3>Estrategias Activas</h3>
-      <p class="sub">Las reglas que Ayanokōji sigue. Puedes añadir, eliminar y simularlas en el sandbox.</p>
+    <div class="panel-footer">
+      <span id="version-tag">v20.0</span>
     </div>
-    <div class="idea-box">
-      <input type="text" id="estr-nombre" placeholder="Nombre de la estrategia" style="width:100%;background:transparent;border:none;color:var(--fg);font-family:inherit;font-size:14px;outline:none;padding:6px 0;border-bottom:1px solid var(--bd);margin-bottom:10px">
-      <select id="estr-tipo" style="width:100%;background:var(--elev);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:8px;font-family:inherit;font-size:13px;margin-bottom:10px">
-        <option value="publicacion">Publicación</option>
-        <option value="narrativa">Narrativa</option>
-        <option value="monetizacion">Monetización</option>
-        <option value="psicologia">Psicología</option>
-        <option value="sandbox">Sandbox</option>
-        <option value="retencion">Retención</option>
-        <option value="canales">Canales</option>
-        <option value="general">General</option>
-      </select>
-      <textarea id="estr-contenido" placeholder="Contenido de la estrategia..." rows="3"></textarea>
-      <button id="estr-save">Añadir estrategia</button>
-    </div>
-    <div id="estrategias-content"></div>
-  </section>
-
-  <section id="view-shadow" class="view">
-    <div class="section-head">
-      <h3>Shadow Arise · Estado del Producto</h3>
-      <p class="sub">Usuarios, conversión, retención, ingresos y evolución del proyecto.</p>
-    </div>
-    <div id="shadow-content"></div>
-  </section>
-
-  <section id="view-stats" class="view">
-    <div class="section-head">
-      <h3>Estado del Sistema</h3>
-      <p class="sub">Uso real de Cloudflare, procesos, contexto y presupuesto interno.</p>
-    </div>
-    <div id="uso-real-content"></div>
-    <div id="stats-content"></div>
-  </section>
-
-  <section id="view-actividad" class="view">
-    <div class="section-head">
-      <h3>Actividad en vivo</h3>
-      <p class="sub">Lo que Ayanokōji está haciendo ahora mismo. Se actualiza cada 15 segundos.</p>
-    </div>
-    <div id="actividad-live"></div>
-    <div id="actividad-content"></div>
-  </section>
-
-  <section id="view-decisiones" class="view">
-    <div class="section-head">
-      <h3>Decisiones Autónomas</h3>
-      <p class="sub">Lo que Ayanokōji ha decidido por su cuenta. Con simulación, resultado y nivel de acierto.</p>
-    </div>
-    <div id="decisiones-content"></div>
-  </section>
-
-  <section id="view-ideas" class="view">
-    <div class="section-head">
-      <h3>Bandeja de Ideas</h3>
-      <p class="sub">Escribe sin juicio. Ayanokōji no leerá nada hasta que tú se lo pidas.</p>
-    </div>
-    <div class="idea-box">
-      <textarea id="idea-input" placeholder="Escribe una idea, tarea futura, o pensamiento..." rows="3"></textarea>
-      <button id="idea-save">Guardar idea</button>
-    </div>
-    <div id="ideas-content"></div>
-  </section>
-
-  <section id="view-bandeja" class="view">
-    <div class="section-head">
-      <h3>Bandeja de Notificaciones</h3>
-      <p class="sub">Lo que Ayanokōji ha reportado. Sin depender de terceros.</p>
-    </div>
-    <div class="idea-box" style="display:flex;gap:8px;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;color:var(--fg2)">Notificaciones internas del sistema</span>
-      <button id="marcar-leidas" style="padding:6px 12px;font-size:12px">Marcar todas leídas</button>
-    </div>
-    <div id="notif-content"></div>
-  </section>
+  </aside>
 </main>
 
-<button class="back-to-chat" id="backToChat" aria-label="Volver al chat">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-  </svg>
-  <span>Chat</span>
-</button>
-
 <footer id="footer">
-  <div class="tools">
-    <button class="tool" id="btnFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir</button>
-    <button class="tool" id="btnImagen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Imagen</button>
-    <button class="tool" id="btnIndexar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Indexar</button>
-    <button class="tool" id="btnMigrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg> Migrar</button>
-    <button class="tool" id="btnDiag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Diagnóstico</button>
-    <button class="tool" id="btnProc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Procesos</button>
-    <button class="tool" id="btnCtx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v6H9z"/><path d="M3 9h6v6H3z"/><path d="M15 9h6v6h-6z"/><path d="M9 15h6v6H9z"/></svg> Contexto</button>
-    <button class="tool" id="btnCorregir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Corregir voz</button>
-    <button class="tool" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Limpiar</button>
-  </div>
-  <div class="composer">
-    <textarea id="msg" placeholder="Escribe al Comandante..." rows="1"></textarea>
-    <button class="send" id="send" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
-  </div>
-  <div class="meta">
-    <span><kbd>Enter</kbd> enviar · <kbd>Shift</kbd>+<kbd>Enter</kbd> nueva línea</span>
-    <span id="meta-info"></span>
+  <div class="composer-wrap">
+    <div class="tools">
+      <button class="tool" id="btnFile" title="Subir archivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </button>
+      <button class="tool" id="btnImagen" title="Generar imagen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="tool" id="btnDiag" title="Diagnóstico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </button>
+      <button class="tool" id="btnCorregir" title="Corregir voz">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
+      <div class="spacer"></div>
+      <span class="hint-key">Enter · enviar</span>
+    </div>
+    <div class="composer">
+      <textarea id="msg" placeholder="Habla con Ayanokōji o da una orden..." rows="1"></textarea>
+      <button class="send" id="send" aria-label="Enviar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </button>
+    </div>
+    <div class="meta" id="meta-info"></div>
   </div>
   <input type="file" id="file" accept=".json,.csv,.txt,application/json,text/plain">
 </footer>
 
 <div class="panel" id="panel">
-  <div class="panel-c">
-    <div class="panel-h"><h3 id="panelT">Panel</h3><button class="close" id="panelX">×</button></div>
+  <div class="panel-content">
+    <div class="panel-head">
+      <h3 id="panelT">Panel</h3>
+      <button class="close" id="panelX">×</button>
+    </div>
     <div id="panelB"></div>
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=20.0"></script>
 </body>
 </html>
