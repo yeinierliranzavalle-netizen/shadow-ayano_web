@@ -3,8 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Ayanokōji · Centro de Comando</title>
-<link rel="stylesheet" href="styles.css?v=20.0">
+<script>
+// Captura de errores visible en pantalla
+window.addEventListener('error', function(e) {
+  var div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f87171;color:#000;padding:10px;z-index:99999;font-family:monospace;font-size:12px;white-space:pre-wrap';
+  div.textContent = 'JS ERROR: ' + e.message + '\n' + (e.filename || '') + ':' + (e.lineno || '');
+  document.body ? document.body.insertBefore(div, document.body.firstChild) : window.addEventListener('load', function(){ document.body.insertBefore(div, document.body.firstChild); });
+});
+</script>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -13,25 +23,19 @@
     <div class="logo">A</div>
     <div class="brand-text">
       <b>Ayanokōji</b>
-      <span>· Digital v20</span>
+      <span id="version-tag">· Digital v21</span>
     </div>
   </div>
 
-  <div class="status" id="status-badge">
+  <div class="status">
     <div class="dot" id="dot"></div>
     <span id="stat">conectando</span>
   </div>
 
-  <div class="modos-bar" id="modos-bar">
-    <span class="modo-indicator" id="modo-arquitecto" title="Modo Arquitecto">
-      <span class="dot"></span> ARQ
-    </span>
-    <span class="modo-indicator" id="modo-intensivo" title="Modo Intensivo">
-      <span class="dot"></span> INT
-    </span>
-    <span class="modo-indicator" id="modo-ausente" title="Modo Ausente">
-      <span class="dot"></span> AUS
-    </span>
+  <div class="modos-bar">
+    <span class="modo-indicator" id="modo-arquitecto"><span class="dot"></span> ARQ</span>
+    <span class="modo-indicator" id="modo-intensivo"><span class="dot"></span> INT</span>
+    <span class="modo-indicator" id="modo-ausente"><span class="dot"></span> AUS</span>
   </div>
 
   <button class="widgets-toggle" id="widgetsToggle" aria-label="Abrir widgets">
@@ -44,7 +48,7 @@
     <div id="log" class="log">
       <div class="welcome" id="welcome">
         <h1>Ayanokōji <b>Digital</b></h1>
-        <p class="sub">Centro de comando · v20.0</p>
+        <p class="sub">Centro de comando · v21.0</p>
         <p class="hint">Escribe una orden. Habla con él. O pídele que lea su propio código.</p>
         <div class="chips">
           <button class="chip" data-t="Cómo estás">Estado</button>
@@ -66,85 +70,36 @@
       <button class="panel-close" id="panelClose">×</button>
     </div>
     <div class="widgets-grid">
-      <button class="widget" data-view="confianza">
-        <div class="widget-label">CONFIANZA</div>
-        <div class="widget-value" id="w-confianza">—</div>
-        <div class="widget-bar"><div id="w-confianza-bar"></div></div>
-      </button>
-      <button class="widget" data-view="mision">
-        <div class="widget-label">MISIÓN</div>
-        <div class="widget-value small" id="w-mision">—</div>
-      </button>
-      <button class="widget" data-view="pensamiento">
-        <div class="widget-label">PENSAMIENTO</div>
-        <div class="widget-value small" id="w-pensamiento">—</div>
-      </button>
-      <button class="widget" data-view="actividad">
-        <div class="widget-label">ACTIVIDAD</div>
-        <div class="widget-value small" id="w-actividad">—</div>
-      </button>
-      <button class="widget" data-view="bandeja">
-        <div class="widget-label">BANDEJA</div>
-        <div class="widget-value" id="w-bandeja">0</div>
-      </button>
-      <button class="widget" data-view="calibracion">
-        <div class="widget-label">EXAMEN</div>
-        <div class="widget-value small" id="w-examen">—</div>
-      </button>
-      <button class="widget" data-view="sandbox">
-        <div class="widget-label">SANDBOX</div>
-        <div class="widget-value" id="w-sandbox">—</div>
-      </button>
-      <button class="widget" data-view="decisiones">
-        <div class="widget-label">DECISIONES</div>
-        <div class="widget-value" id="w-decisiones">—</div>
-      </button>
-      <button class="widget" data-view="shadow">
-        <div class="widget-label">SHADOW</div>
-        <div class="widget-value" id="w-shadow">—</div>
-      </button>
-      <button class="widget" data-view="stats">
-        <div class="widget-label">SISTEMA</div>
-        <div class="widget-value small" id="w-stats">—</div>
-      </button>
-      <button class="widget" data-view="estrategias">
-        <div class="widget-label">ESTRATEGIAS</div>
-        <div class="widget-value" id="w-estrategias">—</div>
-      </button>
-      <button class="widget" data-view="ideas">
-        <div class="widget-label">IDEAS</div>
-        <div class="widget-value" id="w-ideas">—</div>
-      </button>
+      <button class="widget" data-view="confianza"><div class="widget-label">CONFIANZA</div><div class="widget-value" id="w-confianza">—</div><div class="widget-bar"><div id="w-confianza-bar"></div></div></button>
+      <button class="widget" data-view="mision"><div class="widget-label">MISIÓN</div><div class="widget-value small" id="w-mision">—</div></button>
+      <button class="widget" data-view="pensamiento"><div class="widget-label">PENSAMIENTO</div><div class="widget-value small" id="w-pensamiento">—</div></button>
+      <button class="widget" data-view="actividad"><div class="widget-label">ACTIVIDAD</div><div class="widget-value small" id="w-actividad">—</div></button>
+      <button class="widget" data-view="bandeja"><div class="widget-label">BANDEJA</div><div class="widget-value" id="w-bandeja">0</div></button>
+      <button class="widget" data-view="calibracion"><div class="widget-label">EXAMEN</div><div class="widget-value small" id="w-examen">—</div></button>
+      <button class="widget" data-view="sandbox"><div class="widget-label">SANDBOX</div><div class="widget-value" id="w-sandbox">—</div></button>
+      <button class="widget" data-view="decisiones"><div class="widget-label">DECISIONES</div><div class="widget-value" id="w-decisiones">—</div></button>
+      <button class="widget" data-view="shadow"><div class="widget-label">SHADOW</div><div class="widget-value" id="w-shadow">—</div></button>
+      <button class="widget" data-view="stats"><div class="widget-label">SISTEMA</div><div class="widget-value small" id="w-stats">—</div></button>
+      <button class="widget" data-view="estrategias"><div class="widget-label">ESTRATEGIAS</div><div class="widget-value" id="w-estrategias">—</div></button>
+      <button class="widget" data-view="ideas"><div class="widget-label">IDEAS</div><div class="widget-value" id="w-ideas">—</div></button>
     </div>
-    <div class="panel-footer">
-      <span id="version-tag">v20.0</span>
-    </div>
+    <div class="panel-footer"><span id="version-tag-2">v21.0</span></div>
   </aside>
 </main>
 
 <footer id="footer">
   <div class="composer-wrap">
     <div class="tools">
-      <button class="tool" id="btnFile" title="Subir archivo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      </button>
-      <button class="tool" id="btnImagen" title="Generar imagen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      </button>
-      <button class="tool" id="btnDiag" title="Diagnóstico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      </button>
-      <button class="tool" id="btnCorregir" title="Corregir voz">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      </button>
+      <button class="tool" id="btnFile" title="Subir archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+      <button class="tool" id="btnImagen" title="Generar imagen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+      <button class="tool" id="btnDiag" title="Diagnóstico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+      <button class="tool" id="btnCorregir" title="Corregir voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
       <div class="spacer"></div>
       <span class="hint-key">Enter · enviar</span>
     </div>
     <div class="composer">
       <textarea id="msg" placeholder="Habla con Ayanokōji o da una orden..." rows="1"></textarea>
-      <button class="send" id="send" aria-label="Enviar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-      </button>
+      <button class="send" id="send" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
     </div>
     <div class="meta" id="meta-info"></div>
   </div>
@@ -161,6 +116,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20.0"></script>
+<script src="app.js"></script>
 </body>
 </html>
